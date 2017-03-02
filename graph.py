@@ -64,7 +64,7 @@ class GraphicDesigner(object):
 
         ax.legend()
 
-        # 2nd subplot: FITNESS
+        # 2nd subplot: FITNESS TLNNJZLJKNTZLJKNVZ
         x = range(len(self.fitness_list))
         y = self.fitness_list
 

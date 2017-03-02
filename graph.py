@@ -3,100 +3,104 @@ from pylab import plt
 from os import path
 
 
-class GraphicDesigner(object):
+def get_fig_name(name, folder="~/Desktop/"):
 
-    def __init__(self, backup, parameters):
+    fig_name = path.expanduser("{}{}.pdf".format(folder, name))
 
-        self.exchanges_list = backup["exchanges"]
-        self.fitness_list = backup["fitness"]
-        self.n_exchanges_list = backup["n_exchanges"]
+    init_fig_name = fig_name.split(".")[0]
+    i = 2
+    while path.exists(fig_name):
+        fig_name = "{}{}.pdf".format(init_fig_name, i)
+        i += 1
 
-        self.parameters = parameters
+    return fig_name
 
-        self.main_figure_name = self.get_fig_name(name="MoneyBootstrapping_main_fig")
 
-    @staticmethod
-    def get_fig_name(name, folder="~/Desktop/"):
+def plot(results, parameters, fig_name):
 
-        fig_name = path.expanduser("{}{}.pdf".format(folder, name))
+    # What is common to all subplots
+    fig = plt.figure(figsize=(25, 12))
+    fig.patch.set_facecolor('white')
 
-        init_fig_name = fig_name.split(".")[0]
-        i = 2
-        while path.exists(fig_name):
-            fig_name = "{}{}.pdf".format(init_fig_name, i)
-            i += 1
+    n_lines = 2
+    n_columns = 3
 
-        return fig_name
+    # 1rst subplot
 
-    def plot_main_fig(self):
+    x_max = len(results["exchanges"])
+    x = range(x_max)
 
-        # What is common to all subplots
-        fig = plt.figure(figsize=(25, 12))
-        fig.patch.set_facecolor('white')
+    ax = plt.subplot(n_lines, n_columns, 1)
+    ax.set_title("Proportion of each type of exchange\naccording to time \n")
 
-        n_lines = 1
-        n_columns = 4
+    type_of_exchanges = sorted([i for i in results["exchanges"][0].keys()])
+    y = []
+    for i in range(len(type_of_exchanges)):
+        y.append([])
 
-        # 1rst subplot
-
-        x_max = len(self.exchanges_list)
-        x = range(x_max)
-
-        ax = plt.subplot(n_lines, n_columns, 1)
-        ax.set_title("Proportion of each type of exchange according to time \n")
-
-        type_of_exchanges = sorted([i for i in self.exchanges_list[0].keys()])
-        y = []
-        for i in range(len(type_of_exchanges)):
-            y.append([])
-
-        for i in range(x_max):
-
-            for exchange_idx in range(len(type_of_exchanges)):
-
-                y[exchange_idx].append(self.exchanges_list[i][type_of_exchanges[exchange_idx]])
-
-        ax.set_ylim([-0.02, 1.02])
+    for i in range(x_max):
 
         for exchange_idx in range(len(type_of_exchanges)):
 
-            ax.plot(x, y[exchange_idx], label="Exchange {}".format(type_of_exchanges[exchange_idx]), linewidth=2)
+            y[exchange_idx].append(results["exchanges"][i][type_of_exchanges[exchange_idx]])
 
-        ax.legend()
+    ax.set_ylim([-0.02, 1.02])
 
-        # 2nd subplot: FITNESS TLNNJZLJKNTZLJKNVZ
-        x = range(len(self.fitness_list))
-        y = self.fitness_list
+    for exchange_idx in range(len(type_of_exchanges)):
 
-        ax = plt.subplot(n_lines, n_columns, 2)
-        ax.set_title("Fitness average according to time \n")
-        ax.plot(x, y, linewidth=2)
+        ax.plot(x, y[exchange_idx], label="Exchange {}".format(type_of_exchanges[exchange_idx]), linewidth=2)
 
-        # 3rd subplot: NUMBER OF EXCHANGES
-        x = range(len(self.n_exchanges_list))
-        y = self.n_exchanges_list
+    ax.legend()
 
-        ax = plt.subplot(n_lines, n_columns, 3)
-        ax.set_title("Total number of exchanges according to time \n")
-        ax.plot(x, y, linewidth=2)
+    # 2nd subplot: FITNESS TLNNJZLJKNTZLJKNVZ
+    x = range(len(results["fitness"]))
+    y = results["fitness"]
 
-        # 4th subplot: PARAMETERS
-        ax = plt.subplot(n_lines, n_columns, 4)
-        ax.set_title("Parameters")
-        ax.axis('off')
+    ax = plt.subplot(n_lines, n_columns, 2)
+    ax.set_title("Fitness average according to time \n")
+    ax.plot(x, y, linewidth=2)
 
-        msg = ""
-        for key in sorted(self.parameters.keys()):
-            msg += "{}: {}; \n\n".format(key, self.parameters[key])
+    # 3rd subplot: NUMBER OF EXCHANGES
+    x = range(len(results["n_exchanges"]))
+    y = results["n_exchanges"]
 
-        ax.text(0.5, 0.5, msg, ha='center', va='center', size=12)
+    ax = plt.subplot(n_lines, n_columns, 3)
+    ax.set_title("Total number of exchanges according to time \n")
+    ax.plot(x, y, linewidth=2)
 
-        plt.savefig(self.main_figure_name)
+    # 4rd subplot: NUMBER OF EXCHANGES
+    x = range(len(results["n_market_agents"]))
+    y = results["n_market_agents"]
 
-        plt.close()
+    ax = plt.subplot(n_lines, n_columns, 4)
+    ax.set_title("Total number of agents frequenting market \n")
+    ax.plot(x, y, linewidth=2)
+
+    # 5th subplot: DIVERSITY OF PRODUCTION
+    x = range(len(results["production_diversity"]))
+    y = results["production_diversity"]
+
+    ax = plt.subplot(n_lines, n_columns, 5)
+    ax.set_title("Production diversity according to time \n")
+    ax.plot(x, y, linewidth=2)
+
+    # 5th subplot: PARAMETERS
+    ax = plt.subplot(n_lines, n_columns, 6)
+    ax.set_title("Parameters")
+    ax.axis('off')
+
+    msg = ""
+    for key in sorted(parameters.keys()):
+        msg += "{}: {}; \n\n".format(key, parameters[key])
+
+    ax.text(0.5, 0.5, msg, ha='center', va='center', size=12)
+
+    plt.savefig(fig_name)
+
+    plt.close()
 
 
-def graph(backup, parameters):
+def graph(results, parameters):
 
-    g = GraphicDesigner(backup=backup, parameters=parameters)
-    g.plot_main_fig()
+    fig_name = get_fig_name(name="MoneyBootstrapping_main_fig")
+    plot(results, parameters, fig_name)

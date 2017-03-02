@@ -1,42 +1,41 @@
 import numpy as np
 from tqdm import tqdm
 import itertools as it
-import copy as cp
 from agent import Agent
 
 
 class Economy(object):
 
-    def __init__(self, n_generations, n_periods_per_generation, n_goods, n_agents, n_reproduction_pairs, p_mutation):
+    def __init__(self, n_generations, n_periods_per_generation, n_goods, n_agents, reproduction_proportion, p_mutation):
 
         self.n_generations = n_generations
         self.n_periods_per_generation = n_periods_per_generation
         self.n_goods = n_goods
         self.n_agents = n_agents
 
-        self.n_reproduction_pairs = n_reproduction_pairs
+        self.n_reproduction_pairs = int(reproduction_proportion * n_agents)
 
         self.p_mutation = p_mutation
 
         self.agents = self.create_agents()
 
-        self.fitness = np.zeros(self.n_agents)
-
         self.diversity_quantity_mapping = self.create_diversity_quantity_mapping(n=n_goods, k=n_goods+1)
-
-        # ----- For periodic backup ----- #
-
-        self.exchanges = dict()
-        for i in it.combinations(range(self.n_goods), r=2):
-            self.exchanges[i] = 0
-        self.n_exchange = 0
-        self.average_fitness = 0
 
         # ---- For final backup ----- #
         self.back_up = {
             "exchanges": [],
             "n_exchanges": [],
             "fitness": [],
+            "n_market_agents": [],
+            "production_diversity": []
+        }
+
+        # ----- For periodic backup ----- #
+
+        self.temp_back_up = {
+            "exchanges": dict([((i, j), 0) for i, j in it.combinations(range(n_goods), r=2)]),
+            "n_exchanges": 0,
+            "fitness": 0,
         }
         
     def run(self):
@@ -53,11 +52,6 @@ class Economy(object):
             self.reproduce_agents()
 
         return self.back_up
-
-    def prepare_new_generation(self):
-
-        for i in range(self.n_agents):
-            self.agents[i].produce(self.diversity_quantity_mapping)
 
     @staticmethod
     def create_diversity_quantity_mapping(n, k):
@@ -80,17 +74,15 @@ class Economy(object):
     def derangement(array_like):
 
         a = list(array_like)
-        b = list(array_like)
 
         while True:
 
             error = 0
 
             first = np.random.permutation(a)
-            second = np.random.permutation(b)
-            pairs = zip(first, second)
+            second = np.random.permutation(a)
 
-            for i, j in pairs:
+            for i, j in zip(first, second):
 
                 if i == j:
                     error = 1
@@ -120,15 +112,32 @@ class Economy(object):
 
         return Agent(
             n_goods=self.n_goods,
-            production_preferences=np.random.permutation(np.arange(self.n_goods)),
-            production_diversity=np.random.randint(1, self.n_goods + 1),
-            goods_to_buy=np.random.choice(np.arange(self.n_goods), size=np.random.randint(0, self.n_goods + 1)),
-            goods_to_sell=np.random.choice(np.arange(self.n_goods), size=np.random.randint(0, self.n_goods + 1)),
-            idx=idx)
+            idx=idx, **self.get_agent_random_strategic_attributes())
+
+    def get_agent_random_strategic_attributes(self):
+
+        return {
+            "production_preferences": np.random.permutation(np.arange(self.n_goods)),
+            "production_diversity": np.random.randint(1, self.n_goods + 1),
+            "goods_to_buy": np.random.choice(np.arange(self.n_goods),
+                                             size=np.random.randint(1, self.n_goods + 1), replace=False),
+            "goods_to_sell": np.random.choice(np.arange(self.n_goods),
+                                              size=np.random.randint(1, self.n_goods + 1), replace=False)
+        }
+
+    def prepare_new_generation(self):
+
+        for i in range(self.n_agents):
+            self.agents[i].stock[:] = 0
+            self.agents[i].fitness = 0
+            self.agents[i].produce(self.diversity_quantity_mapping)
 
     def time_step(self):
 
         market_agents = [self.agents[i].idx for i in range(self.n_agents) if not self.agents[i].stock.any() == 0]
+
+        # -- STATS -- #
+        self.back_up["n_market_agents"].append(len(market_agents))
 
         # ---------- MANAGE EXCHANGES ----- #
 
@@ -160,8 +169,8 @@ class Economy(object):
 
             exchange = tuple(sorted(exchange))
 
-            self.exchanges[exchange] += 1
-            self.n_exchange += 1
+            self.temp_back_up["exchanges"][exchange] += 1
+            self.temp_back_up["n_exchanges"] += 1
 
             # ---------------- #
     
@@ -189,21 +198,24 @@ class Economy(object):
             else:
                 continue
 
-            r = np.random.random()
+            good_attributes = self.agents[to_be_copied].get_strategic_attributes()
+            random_attributes = self.get_agent_random_strategic_attributes()
 
-            if r <= self.p_mutation:
+            r = np.random.random(len(good_attributes))
 
-                self.agents[to_be_changed] = self.create_single_agent(idx=to_be_changed)
+            for idx, key in enumerate(good_attributes.keys()):
 
-            else:
-                self.agents[to_be_changed] = cp.copy(self.agents[to_be_copied])
-                self.agents[to_be_changed].idx = to_be_changed
+                if r[idx] <= self.p_mutation:
+
+                    setattr(self.agents[to_be_changed], key, random_attributes[key])
+
+                else:
+                    setattr(self.agents[to_be_changed], key, good_attributes[key])
 
         # --- FOR STATS AND RESET ---- #
 
         for i in range(self.n_agents):
-            self.fitness[i] = self.agents[i].fitness
-            self.agents[i].fitness = 0
+            self.temp_back_up["fitness"] += self.agents[i].fitness
 
     # --------------------------------------------------------------------------------------- #
     # --------------------------------- SAVING PART ----------------------------------------- #
@@ -211,31 +223,32 @@ class Economy(object):
 
     def make_a_backup(self):
 
-        # Keep a trace from utilities
-        average_fitness = sum(self.fitness)/self.n_agents
+        # Keep a trace of fitness
+        average_fitness = self.temp_back_up["fitness"]/self.n_agents
 
-        # ----- FOR FUTURE BACKUP ----- #
+        # Keep a trace of production diversity
+        average_production_diversity = np.mean([a.production_diversity for a in self.agents])
 
-        for key in self.exchanges.keys():
+        # Keep a trace of exchanges
+        for key in self.temp_back_up["exchanges"].keys():
             # Avoid division by zero
-            if self.n_exchange > 0:
-                self.exchanges[key] /= self.n_exchange
+            if self.temp_back_up["n_exchanges"] > 0:
+                self.temp_back_up["exchanges"][key] /= self.temp_back_up["n_exchanges"]
             else:
-                self.exchanges[key] = 0
+                self.temp_back_up["exchanges"][key] = 0
 
         # For back up
-        self.back_up["exchanges"].append(self.exchanges.copy())
+        self.back_up["exchanges"].append(self.temp_back_up["exchanges"].copy())
         self.back_up["fitness"].append(average_fitness)
-        self.back_up["n_exchanges"].append(self.n_exchange)
+        self.back_up["n_exchanges"].append(self.temp_back_up["n_exchanges"])
+        self.back_up["production_diversity"].append(average_production_diversity)
 
         self.reinitialize_backup_containers()
 
     def reinitialize_backup_containers(self):
 
-        # Reinitialize fitness counter
-        self.fitness[:] = 0
-
         # Containers for future backup
-        for k in self.exchanges.keys():
-            self.exchanges[k] = 0
-        self.n_exchange = 0
+        for k in self.temp_back_up["exchanges"].keys():
+            self.temp_back_up["exchanges"][k] = 0
+        self.temp_back_up["n_exchanges"] = 0
+        self.temp_back_up["fitness"] = 0

@@ -5,18 +5,18 @@ from graph import graph
 def main():
 
     parameters = {
-        "n_generations": 10,
-        "n_periods_per_generation": 10,
-        "n_goods": 10,
-        "n_agents": 1000,
-        "n_reproduction_pairs": 200,
-        "p_mutation": 0.1
+        "n_generations": 200,
+        "n_periods_per_generation": 100,
+        "n_goods": 3,
+        "n_agents": 200,
+        "reproduction_proportion": 0.01,
+        "p_mutation": 0.01
     }
 
     e = Economy(**parameters)
 
     backup = e.run()
-    graph(backup=backup, parameters=parameters)
+    graph(results=backup, parameters=parameters)
 
 if __name__ == "__main__":
 

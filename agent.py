@@ -45,11 +45,14 @@ class Agent(object):
         self.stock[exchange[0]] -= 1
         self.stock[exchange[1]] += 1
 
-    def get_strategy(self):
+    def get_strategic_attributes(self):
 
-        all_attr = vars(self)
-        for i in ["n_goods", "stock"]:
+        all_attr = vars(self).copy()
+
+        for i in ["n_goods", "stock", "fitness", "idx"]:
             all_attr.pop(i)
+
+        return all_attr
 
 
 def create_agent(n_goods=3, idx=0):
@@ -58,13 +61,12 @@ def create_agent(n_goods=3, idx=0):
         n_goods=n_goods,
         production_preferences=np.random.permutation(np.arange(n_goods)),
         production_diversity=np.random.randint(1, n_goods + 1),
-        goods_to_buy=np.random.choice(np.arange(n_goods), size=np.random.randint(0, n_goods + 1)),
-        goods_to_sell=np.random.choice(np.arange(n_goods), size=np.random.randint(0, n_goods + 1)),
+        goods_to_buy=np.random.choice(np.arange(n_goods), size=np.random.randint(1, n_goods + 1), replace=False),
+        goods_to_sell=np.random.choice(np.arange(n_goods), size=np.random.randint(1, n_goods + 1), replace=False),
         idx=idx)
 
 
 if __name__ == "__main__":
-
 
     a = create_agent()
     print(vars(a))

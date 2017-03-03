@@ -1,6 +1,7 @@
 import numpy as np
 from pylab import plt
 from os import path
+import itertools as it
 
 
 def get_fig_name(name, folder="~/Desktop/"):
@@ -22,16 +23,31 @@ def plot(results, parameters, fig_name):
     fig = plt.figure(figsize=(25, 12))
     fig.patch.set_facecolor('white')
 
-    n_lines = 2
+    line_width = 2
+
+    n_lines = 3
     n_columns = 3
 
-    # 1rst subplot
+    counter = it.count(1)
+
+    # ----- FOR EACH GENERATION ------ #
+
+    # FITNESS
+
+    x = range(len(results["fitness"]))
+    y = results["fitness"]
+
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Fitness average\naccording to number of generations\n")
+    ax.plot(x, y, linewidth=line_width)
+
+    # PROPORTION OF EACH TYPE OF EXCHANGE
 
     x_max = len(results["exchanges"])
     x = range(x_max)
 
-    ax = plt.subplot(n_lines, n_columns, 1)
-    ax.set_title("Proportion of each type of exchange\naccording to time \n")
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Proportion of each type of exchange\naccording to number of generations\n")
 
     type_of_exchanges = sorted([i for i in results["exchanges"][0].keys()])
     y = []
@@ -52,40 +68,46 @@ def plot(results, parameters, fig_name):
 
     ax.legend()
 
-    # 2nd subplot: FITNESS TLNNJZLJKNTZLJKNVZ
-    x = range(len(results["fitness"]))
-    y = results["fitness"]
+    # NUMBER OF EXCHANGES GENERATION
 
-    ax = plt.subplot(n_lines, n_columns, 2)
-    ax.set_title("Fitness average according to time \n")
-    ax.plot(x, y, linewidth=2)
-
-    # 3rd subplot: NUMBER OF EXCHANGES
     x = range(len(results["n_exchanges"]))
     y = results["n_exchanges"]
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Total number of exchanges\naccording to number of generations\n")
+    ax.plot(x, y, linewidth=line_width)
 
-    ax = plt.subplot(n_lines, n_columns, 3)
-    ax.set_title("Total number of exchanges according to time \n")
-    ax.plot(x, y, linewidth=2)
+    # DIVERSITY OF PRODUCTION
 
-    # 4rd subplot: NUMBER OF EXCHANGES
-    x = range(len(results["n_market_agents"]))
-    y = results["n_market_agents"]
-
-    ax = plt.subplot(n_lines, n_columns, 4)
-    ax.set_title("Total number of agents frequenting market \n")
-    ax.plot(x, y, linewidth=2)
-
-    # 5th subplot: DIVERSITY OF PRODUCTION
     x = range(len(results["production_diversity"]))
     y = results["production_diversity"]
 
-    ax = plt.subplot(n_lines, n_columns, 5)
-    ax.set_title("Production diversity according to time \n")
-    ax.plot(x, y, linewidth=2)
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Production diversity\naccording to number of generations\n")
+    ax.plot(x, y, linewidth=line_width)
+
+    # ----- FOR EACH PERIOD ------ #
+
+    # N MARKETS AGENTS T
+    x = range(len(results["n_market_agents"]))
+    y = results["n_market_agents"]
+
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Total number of agents frequenting market according to $t$\n")
+    ax.plot(x, y, linewidth=line_width)
+
+    # N EXCHANGES T
+    x = range(len(results["n_exchanges_t"]))
+    y = results["n_exchanges_t"]
+
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Total number of exchanges\n"
+                 "according to $t$ \n")
+    ax.plot(x, y, linewidth=line_width)
+
+    # ------ PARAMETERS ----- #
 
     # 5th subplot: PARAMETERS
-    ax = plt.subplot(n_lines, n_columns, 6)
+    ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Parameters")
     ax.axis('off')
 
@@ -95,6 +117,8 @@ def plot(results, parameters, fig_name):
 
     ax.text(0.5, 0.5, msg, ha='center', va='center', size=12)
 
+    plt.tight_layout()
+
     plt.savefig(fig_name)
 
     plt.close()
@@ -102,5 +126,5 @@ def plot(results, parameters, fig_name):
 
 def graph(results, parameters):
 
-    fig_name = get_fig_name(name="MoneyBootstrapping_main_fig")
+    fig_name = get_fig_name(name="MoneyBootstrapping")
     plot(results, parameters, fig_name)

@@ -1,11 +1,15 @@
+import numpy as np
 from economy import Economy
 from graph import graph
 
 
 def main():
 
+    random_seed = np.random.randint(4294967295)
+
     parameters = {
-        "n_generations": 200,
+        "random_seed": random_seed,
+        "n_generations": 10000,
         "n_periods_per_generation": 100,
         "n_goods": 3,
         "n_agents": 200,

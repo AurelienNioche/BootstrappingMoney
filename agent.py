@@ -35,10 +35,10 @@ class Agent(object):
 
     def consume(self):
 
-        while self.stock.all() >= 1:
+        n_consumption = np.min(self.stock)
 
-            self.stock[:] -= 1
-            self.fitness += 1
+        self.stock[:] -= n_consumption
+        self.fitness += n_consumption
 
     def proceed_to_exchange(self, exchange):
 

@@ -6,8 +6,10 @@ from agent import Agent
 
 class Economy(object):
 
-    def __init__(self, n_generations, n_periods_per_generation, n_goods, n_agents, reproduction_proportion, p_mutation):
+    def __init__(self, n_generations, n_periods_per_generation, n_goods, n_agents, reproduction_proportion,
+                 p_mutation, random_seed):
 
+        np.random.seed(random_seed)
         self.n_generations = n_generations
         self.n_periods_per_generation = n_periods_per_generation
         self.n_goods = n_goods
@@ -19,7 +21,8 @@ class Economy(object):
 
         self.agents = self.create_agents()
 
-        self.diversity_quantity_mapping = self.create_diversity_quantity_mapping(n=n_goods, k=n_goods+1)
+        self.diversity_quantity_mapping = self.create_diversity_quantity_mapping(n=n_goods, k=n_goods*2+1)
+        print("Diversity quantity mapping:", self.diversity_quantity_mapping)
 
         # ---- For final backup ----- #
         self.back_up = {
@@ -27,7 +30,8 @@ class Economy(object):
             "n_exchanges": [],
             "fitness": [],
             "n_market_agents": [],
-            "production_diversity": []
+            "production_diversity": [],
+            "n_exchanges_t": []
         }
 
         # ----- For periodic backup ----- #
@@ -131,10 +135,13 @@ class Economy(object):
             self.agents[i].stock[:] = 0
             self.agents[i].fitness = 0
             self.agents[i].produce(self.diversity_quantity_mapping)
+            self.agents[i].consume()
 
     def time_step(self):
 
-        market_agents = [self.agents[i].idx for i in range(self.n_agents) if not self.agents[i].stock.any() == 0]
+        n_exchanges_t = 0
+
+        market_agents = [self.agents[i].idx for i in range(self.n_agents) if max(self.agents[i].stock) > 1]
 
         # -- STATS -- #
         self.back_up["n_market_agents"].append(len(market_agents))
@@ -142,13 +149,17 @@ class Economy(object):
         # ---------- MANAGE EXCHANGES ----- #
 
         for i, j in self.derangement(market_agents):
-            self.make_encounter(i, j)
+            n_exchanges_t += self.make_encounter(i, j)
 
         # Each agent consumes at the end of each round and adapt his behavior (or not).
         for i in market_agents:
             self.agents[i].consume()
 
+        self.back_up["n_exchanges_t"].append(n_exchanges_t)
+
     def make_encounter(self, i, j):
+
+        exchange_takes_place = 0
         
         possible_exchange_i = {(x, y) for x, y in it.product(self.agents[i].goods_to_sell, self.agents[i].goods_to_buy)
                                if x != y and self.agents[i].stock[x] > 1}
@@ -172,7 +183,10 @@ class Economy(object):
             self.temp_back_up["exchanges"][exchange] += 1
             self.temp_back_up["n_exchanges"] += 1
 
+            exchange_takes_place = 1
+
             # ---------------- #
+        return exchange_takes_place
     
     # --------------------------------------------------------------------------------------- #
     # --------------------------- EVOLUTIONARY PART ----------------------------------------- #

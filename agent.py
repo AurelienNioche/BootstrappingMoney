@@ -20,16 +20,17 @@ class Agent(object):
         self.stock = np.zeros(self.n_goods)
 
         self.fitness = 0
+        self.produced_goods = []
 
     def produce(self, diversity_quantity_mapping):
 
         quantity_produced = diversity_quantity_mapping[self.production_diversity]
         assert quantity_produced, "At least a quantity of one is produced."
-        produced_goods = self.production_preferences[:self.production_diversity]
-        assert len(produced_goods), "At least one type of good is produced."
+        self.produced_goods = self.production_preferences[:self.production_diversity]
+        assert len(self.produced_goods), "At least one type of good is produced."
 
         prod = np.zeros(self.n_goods)
-        prod[produced_goods] = quantity_produced
+        prod[self.produced_goods] = quantity_produced
 
         self.stock += prod
 
@@ -49,10 +50,14 @@ class Agent(object):
 
         all_attr = vars(self).copy()
 
-        for i in ["n_goods", "stock", "fitness", "idx"]:
+        for i in ["n_goods", "stock", "fitness", "produced_goods", "production_preferences", "idx"]:
             all_attr.pop(i)
 
         return all_attr
+
+    def get_produced_goods(self):
+
+        return self.produced_goods
 
 
 def create_agent(n_goods=3, idx=0):

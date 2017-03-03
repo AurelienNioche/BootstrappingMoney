@@ -89,3 +89,4 @@ ENV/
 .ropeproject
 .idea/
 report.txt
+oldies.py

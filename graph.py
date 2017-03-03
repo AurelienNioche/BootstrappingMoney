@@ -72,6 +72,7 @@ def plot(results, parameters, fig_name):
 
     x = range(len(results["n_exchanges"]))
     y = results["n_exchanges"]
+
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Total number of exchanges\naccording to number of generations\n")
     ax.plot(x, y, linewidth=line_width)
@@ -84,6 +85,20 @@ def plot(results, parameters, fig_name):
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Production diversity\naccording to number of generations\n")
     ax.plot(x, y, linewidth=line_width)
+
+    # N PRODUCERS
+
+    n_goods = len(results["n_producers"][0])
+
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Number of producers for each good \n")
+
+    for i in range(n_goods):
+        y = [j[i] for j in results["n_producers"]]
+        x = range(len(y))
+        ax.plot(x, y, linewidth=line_width, label="Good {}".format(i))
+
+    ax.legend()
 
     # ----- FOR EACH PERIOD ------ #
 

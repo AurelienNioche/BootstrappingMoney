@@ -19,7 +19,7 @@ class Economy(object):
 
         self.agents = self.create_agents()
 
-        self.diversity_quantity_mapping = self.create_diversity_quantity_mapping(n=n_goods, k=n_goods*2+1)
+        self.diversity_quantity_mapping = self.create_diversity_quantity_mapping(n=n_goods)
         print("Diversity quantity mapping:", self.diversity_quantity_mapping)
 
         self.market_agents = None
@@ -58,20 +58,9 @@ class Economy(object):
         return self.back_up
 
     @staticmethod
-    def create_diversity_quantity_mapping(n, k):
-
-        # k is the squared root of the quantity produced if you produce only one type of good
-
-        a = - (k - 1) / (n - 1)
-        b = (k * n - 1) / (n - 1)
-
-        f = lambda x: a * x + b
-
-        mapping = [0]
-
-        for i in range(1, n + 1):
-            mapping.append(int(f(i)) ** 2)
-
+    def create_diversity_quantity_mapping(n):
+        mapping = [round(n*i**2/j) for (i, j) in zip(range(1, n+1), range(n+1, 1, -1))] + [0]
+        mapping.reverse()
         return mapping
 
     @staticmethod

@@ -2,10 +2,10 @@ import numpy as np
 
 
 def derangement(a, max_tries=100000):
-    """Generate a derangement of a
+    """Generate a derangement of `a`
 
-    A derangement is a permutation of the elements of a where no element
-    keeps its place. Will generate permutations until a good one is found.
+    A derangement is a permutation of the elements of `a` where no element keeps
+    its place. This method will generate permutations until a good one is found.
     To avoid an infinite loop, will raise ValueError if more than `max_tries`
     permutations have been tried unsuccesfully.
 

@@ -10,4 +10,4 @@ import os
 import subprocess
 
 os.environ['PYTHONHASHSEED'] = '0'
-proc = subprocess.call(['python', 'main.py'])
+subprocess.call(['python', 'main.py'])

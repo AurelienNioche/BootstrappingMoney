@@ -5,8 +5,8 @@ from graph import graph
 
 def main():
 
-    # random_seed = np.random.randint(4294967295)
-    random_seed = 1684517814
+    random_seed = np.random.randint(4294967295)
+    # random_seed = 1684517814
 
     parameters = {
         "random_seed": random_seed,

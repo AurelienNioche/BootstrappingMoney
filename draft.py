@@ -3,27 +3,6 @@ import timeit
 from time import time
 
 
-def derangement(array_like):
-
-    a = list(array_like)
-    b = list(array_like)
-
-    while True:
-
-        error = 0
-
-        pairs = zip(np.random.permutation(a), np.random.permutation(b))
-
-        for i, j in pairs:
-
-            if i == j:
-                error = 1
-                break
-        if not error:
-            break
-
-    return pairs
-
 def create_diversity_quantity_mapping(n, k):
 
     a = - (k - 1) / (n - 1)
@@ -38,8 +17,6 @@ def create_diversity_quantity_mapping(n, k):
         mapping.append(int(f(i))**2)
 
     return mapping
-
-
 
 
 if __name__ == "__main__":

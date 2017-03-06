@@ -1,6 +1,9 @@
+import itertools as it
+
 import numpy as np
 from tqdm import tqdm
-import itertools as it
+
+import utils
 from agent import Agent
 
 
@@ -41,7 +44,7 @@ class Economy(object):
             "exchanges": dict([((i, j), 0) for i, j in it.combinations(range(n_goods), r=2)]),
             "n_exchanges": 0
         }
-        
+
     def run(self):
 
         for g in tqdm(range(self.n_generations)):
@@ -63,28 +66,6 @@ class Economy(object):
         mapping.reverse()
         return mapping
 
-    @staticmethod
-    def derangement(array_like):
-
-        a = list(array_like)
-
-        while True:
-
-            error = 0
-
-            first = np.random.permutation(a)
-            second = np.random.permutation(a)
-
-            for i, j in zip(first, second):
-
-                if i == j:
-                    error = 1
-                    break
-            if not error:
-                pairs = zip(first, second)
-                break
-
-        return pairs
 
     def create_agents(self):
 
@@ -138,7 +119,7 @@ class Economy(object):
         # ---------- MANAGE EXCHANGES ----- #
 
         n_exchanges_t = 0   # For stats
-        for i, j in self.derangement(market_agents):
+        for i, j in utils.derangement(market_agents):
             n_exchanges_t += self.make_encounter(i, j)
 
         # Each agent consumes at the end of each round and adapt his behavior (or not).
@@ -156,7 +137,7 @@ class Economy(object):
     def make_encounter(self, i, j):
 
         exchange_takes_place = 0
-        
+
         possible_exchange_i = {(x, y) for x, y in it.product(self.agents[i].goods_to_sell, self.agents[i].goods_to_buy)
                                if x != y and self.agents[i].stock[x] > 1}
         possible_exchange_j = {(y, x) for x, y in it.product(self.agents[j].goods_to_sell, self.agents[j].goods_to_buy)
@@ -182,7 +163,7 @@ class Economy(object):
             # ---------------- #
             # ---------------- #
         return exchange_takes_place
-    
+
     # --------------------------------------------------------------------------------------- #
     # --------------------------- EVOLUTIONARY PART ----------------------------------------- #
     # --------------------------------------------------------------------------------------- #

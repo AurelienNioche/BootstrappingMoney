@@ -66,7 +66,7 @@ class Economy(object):
 
         mapping = [1]
 
-        f = lambda x: (x + 1) ** 2
+        f = lambda x: 2*(x + 1) ** 2
 
         for raw, diversity in enumerate(range(n - 1, 0, -1)):
             previous_quantity_of_production = mapping[-1] * (diversity + 1)

@@ -3,22 +3,23 @@ import timeit
 from time import time
 
 
-def create_diversity_quantity_mapping(n, k):
+def create_diversity_quantity_mapping(n):
 
-    a = - (k - 1) / (n - 1)
-    b = (k * n - 1) / (n - 1)
+    mapping = [1]
 
-    f = lambda x: a*x + b
+    f = lambda x: (x+1)**2
 
-    mapping = [0]
+    for raw, diversity in enumerate(range(n-1, 0, -1)):
 
-    for i in range(1, n + 1):
-
-        mapping.append(int(f(i))**2)
+        previous_quantity_of_production = mapping[-1] * (diversity+1)
+        result = round((previous_quantity_of_production + f(raw))/diversity)
+        mapping.append(result)
+    mapping.append(0)
+    mapping.reverse()
 
     return mapping
 
 
 if __name__ == "__main__":
 
-    print(create_diversity_quantity_dic(n=3, k=4))
+    print(create_diversity_quantity_mapping(n=4))

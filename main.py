@@ -14,7 +14,8 @@ def main():
         "n_periods_per_generation": 12,
         "n_goods": 3,
         "n_agents": 50,
-        "p_mutation": 0.1
+        "p_mutation": 0.1,
+        "mating_rate": 0.2
     }
 
     e = Economy(**parameters)

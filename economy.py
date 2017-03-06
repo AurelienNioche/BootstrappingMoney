@@ -10,7 +10,7 @@ from agent import Agent
 class Economy(object):
 
     def __init__(self, n_generations, n_periods_per_generation, n_goods, n_agents,
-                 p_mutation, random_seed):
+                 p_mutation, mating_rate, random_seed):
 
         np.random.seed(random_seed)
         self.n_generations = n_generations
@@ -19,6 +19,7 @@ class Economy(object):
         self.n_agents = n_agents
 
         self.p_mutation = p_mutation
+        self.n_mating = int(mating_rate * self.n_agents)
 
         self.agents = self.create_agents()
 
@@ -62,10 +63,19 @@ class Economy(object):
 
     @staticmethod
     def create_diversity_quantity_mapping(n):
-        mapping = [round(n*i**2/j) for (i, j) in zip(range(1, n+1), range(n+1, 1, -1))] + [0]
-        mapping.reverse()
-        return mapping
 
+        mapping = [1]
+
+        f = lambda x: (x + 1) ** 2
+
+        for raw, diversity in enumerate(range(n - 1, 0, -1)):
+            previous_quantity_of_production = mapping[-1] * (diversity + 1)
+            result = round((previous_quantity_of_production + f(raw)) / diversity)
+            mapping.append(result)
+        mapping.append(0)
+        mapping.reverse()
+
+        return mapping
 
     def create_agents(self):
 
@@ -116,23 +126,25 @@ class Economy(object):
 
         market_agents = [i for i in self.market_agents if max(self.agents[i].stock) > 1]
 
-        # ---------- MANAGE EXCHANGES ----- #
+        if len(market_agents) > 1:
 
-        n_exchanges_t = 0   # For stats
-        for i, j in utils.derangement(market_agents):
-            n_exchanges_t += self.make_encounter(i, j)
+            # ---------- MANAGE EXCHANGES ----- #
 
-        # Each agent consumes at the end of each round and adapt his behavior (or not).
-        for i in market_agents:
-            self.agents[i].consume()
+            n_exchanges_t = 0   # For stats
+            for i, j in utils.derangement(market_agents):
+                n_exchanges_t += self.make_encounter(i, j)
 
-        # ----------------- #
-        # ---- STATS ------ #
+            # Each agent consumes at the end of each round and adapt his behavior (or not).
+            for i in market_agents:
+                self.agents[i].consume()
 
-        self.back_up["n_exchanges_t"].append(n_exchanges_t)
+            # ----------------- #
+            # ---- STATS ------ #
 
-        # ---------------- #
-        # ---------------- #
+            self.back_up["n_exchanges_t"].append(n_exchanges_t)
+
+            # ---------------- #
+            # ---------------- #
 
     def make_encounter(self, i, j):
 
@@ -180,9 +192,11 @@ class Economy(object):
 
         selected_to_be_copied, selected_to_be_changed = [], []
 
+        # ---- #
+
         data = dict()
 
-        for a in np.random.permutation(self.agents):
+        for a in np.random.permutation(self.agents):  # Permutation is important in case of equal fitness
             prod_pref = tuple(a.production_preferences)
             if prod_pref not in data.keys():
                 data[prod_pref] = {
@@ -192,21 +206,42 @@ class Economy(object):
             data[prod_pref]["idx"].append(a.idx)
             data[prod_pref]["fitness"].append(a.fitness)
 
-        for prod_pref in data.keys():
+        # ---- #
+
+        production_preferences = [i for i in data.keys()]
+
+        p = [len(data[i]["idx"]) / self.n_agents for i in production_preferences]
+
+        prod_pref_idx_list = \
+            np.random.choice(
+                np.arange(len(production_preferences)),
+                p=p,
+                size=self.n_mating)
+
+        for i in prod_pref_idx_list:
+
+            prod_pref = production_preferences[i]
 
             if len(data[prod_pref]["idx"]) > 1:
 
+                idx_with_best_fitness = np.argmax(data[prod_pref]["fitness"])
+                idx_with_worse_fitness = np.argmin(data[prod_pref]["fitness"])
+
                 selected_to_be_copied.append(
                     data[prod_pref]["idx"][
-                        np.argmax(data[prod_pref]["fitness"])
+                        idx_with_best_fitness
                     ]
                 )
 
                 selected_to_be_changed.append(
                     data[prod_pref]["idx"][
-                        np.argmin(data[prod_pref]["fitness"])
+                        idx_with_worse_fitness
                     ]
                 )
+
+                for j, idx in enumerate([idx_with_best_fitness, idx_with_worse_fitness]):
+                    data[prod_pref]["fitness"].pop(idx - j)
+                    data[prod_pref]["idx"].pop(idx - j)
 
         return selected_to_be_copied, selected_to_be_changed
 

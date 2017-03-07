@@ -1,25 +1,67 @@
+from multiprocessing import Queue, Process
 import numpy as np
-import timeit
 from time import time
 
 
-def create_diversity_quantity_mapping(n):
+class Slave(Process):
 
-    mapping = [1]
+    def __init__(self, querying_queue, results_queue, idx):
 
-    f = lambda x: (x+1)**2
+        super().__init__()
+        self.querying_queue, self.results_queue = querying_queue, results_queue
+        self.idx = idx
 
-    for raw, diversity in enumerate(range(n-1, 0, -1)):
+    def run(self):
 
-        previous_quantity_of_production = mapping[-1] * (diversity+1)
-        result = round((previous_quantity_of_production + f(raw))/diversity)
-        mapping.append(result)
-    mapping.append(0)
-    mapping.reverse()
+        while True:
 
-    return mapping
+            a = self.querying_queue.get()
+            if a != "stop":
 
+                print("Slave {} reads: {}".format(self.idx, a))
+
+                self.results_queue.put(self.f(a))
+
+            else:
+                break
+
+        print("Slave {} says he is dead.".format(self.idx))
+
+    def f(self, x):
+
+        for i in range(10**7):  # Totally useless, but requires time!
+            np.exp(x)
+        return np.exp(x)
+
+
+def main():
+
+    t0 = time()
+    n_workers = 4
+    queue_list = []
+
+    for i in range(n_workers):
+
+        querying_queue, results_queue = Queue(), Queue()
+        queue_list.append([querying_queue, results_queue])
+        s = Slave(querying_queue=querying_queue, results_queue=results_queue, idx=i)
+        s.start()
+
+    queue_list = np.asarray(queue_list)
+
+    querying = np.random.randint(1, 100, size=n_workers)
+
+    for i, q in enumerate(queue_list[:, 0]):
+        q.put(querying[i])
+
+    for i, q in enumerate(queue_list[:, 1]):
+        print("For query {}, I get result {}".format(querying[i], q.get()))
+
+    for q in queue_list[:, 0]:
+        q.put("stop")
+
+    print("Time needed:", time()-t0)
 
 if __name__ == "__main__":
 
-    print(create_diversity_quantity_mapping(n=4))
+    main()

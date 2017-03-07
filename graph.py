@@ -64,7 +64,7 @@ def plot(results, parameters, fig_name):
 
     for exchange_idx in range(len(type_of_exchanges)):
 
-        ax.plot(x, y[exchange_idx], label="Exchange {}".format(type_of_exchanges[exchange_idx]), linewidth=2)
+        ax.plot(x, y[exchange_idx], label="Exchange {}".format(type_of_exchanges[exchange_idx]), linewidth=line_width)
 
     ax.legend()
 
@@ -76,6 +76,28 @@ def plot(results, parameters, fig_name):
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Total number of exchanges\naccording to number of generations\n")
     ax.plot(x, y, linewidth=line_width)
+
+    # NUMBER OF INTERVENTION OF EACH GOOD
+
+    x_max = len(results["n_exchanges"])
+    x = range(x_max)
+    y = []
+    for i in range(len(results["n_goods_intervention"][0].keys())):
+        y.append([])
+
+    for i in range(x_max):
+
+        for key in results["n_goods_intervention"][0].keys():
+            y[key].append(results["n_goods_intervention"][i][key])
+
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Number of interventions of each good\naccording to number of generations\n")
+
+    for key in results["n_goods_intervention"][0].keys():
+
+        ax.plot(x, y[key], label="Good {}".format(key), linewidth=line_width)
+
+    ax.legend()
 
     # DIVERSITY OF PRODUCTION
 

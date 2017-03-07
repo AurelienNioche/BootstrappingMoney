@@ -36,14 +36,16 @@ class Economy(object):
             "production_diversity": [],
             "n_producers": [],
             "n_market_agents": [],
-            "n_exchanges_t": []
+            "n_exchanges_t": [],
+            "n_goods_intervention": [],
         }
 
         # ----- For periodic backup ----- #
 
         self.temp_back_up = {
             "exchanges": dict([((i, j), 0) for i, j in it.combinations(range(n_goods), r=2)]),
-            "n_exchanges": 0
+            "n_exchanges": 0,
+            "n_goods_intervention": dict([(i, 0) for i in range(self.n_goods)])
         }
 
     def run(self):
@@ -170,6 +172,8 @@ class Economy(object):
 
             self.temp_back_up["exchanges"][tuple(sorted(exchange))] += 1
             self.temp_back_up["n_exchanges"] += 1
+            for e in exchange:
+                self.temp_back_up["n_goods_intervention"][e] += 1
             exchange_takes_place = 1
 
             # ---------------- #
@@ -298,12 +302,14 @@ class Economy(object):
         self.back_up["n_exchanges"].append(self.temp_back_up["n_exchanges"])
         self.back_up["production_diversity"].append(average_production_diversity)
         self.back_up["n_producers"].append(n_producers)
+        self.back_up["n_goods_intervention"].append(self.temp_back_up["n_goods_intervention"].copy())
 
         self.reinitialize_backup_containers()
 
     def reinitialize_backup_containers(self):
 
         # Containers for future backup
-        for k in self.temp_back_up["exchanges"].keys():
-            self.temp_back_up["exchanges"][k] = 0
+        for dic in [self.temp_back_up["exchanges"], self.temp_back_up["n_goods_intervention"]]:
+            for k in dic.keys():
+                dic[k] = 0
         self.temp_back_up["n_exchanges"] = 0

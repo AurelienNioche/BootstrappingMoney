@@ -10,12 +10,12 @@ def main():
 
     parameters = {
         "random_seed": random_seed,
-        "n_generations": 10000,
-        "n_periods_per_generation": 12,
+        "n_generations": 5000,
+        "n_periods_per_generation": 15,
         "n_goods": 4,
-        "n_agents": 150,
+        "n_agents": 40,
         "p_mutation": 0.1,
-        "mating_rate": 0.2
+        "mating_rate": 0.3
     }
 
     e = Economy(**parameters)

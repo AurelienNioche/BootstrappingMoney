@@ -23,7 +23,6 @@ def derangement(a, max_tries=10**6):
         if max_tries < 0:
             raise ValueError("Number of tries at derangement exceeded")
         np.random.shuffle(b)
-        np.random.shuffle(a)
 
     return zip(a, b)
 

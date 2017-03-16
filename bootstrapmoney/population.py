@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 
 
@@ -27,6 +29,10 @@ class Population:
         self.p_mutation = params['p_mutation']
         self.n_mating   = int(mating_rate * self.n_agents)
 
+        self.all_possible_exchanges = [tuple(p) for p in itertools.permutations(range(self.n_goods), r=2))]
+        self.all_possible_production_preferences = np.random.permutation(
+            tuple(p) for p in itertools.permutations(range(self.n_goods), r=self.n_goods))
+
         self.agents = self.create_population()
 
         self.diversity_quantity_mapping = create_diversity_quantity_mapping(self.n_goods)
@@ -47,15 +53,18 @@ class Population:
             traits = self._random_traits()
         return Agent(traits, index=index)
 
-    def _random_traits(self):
+    def _random_traits(self, index):
         """Create a random agent's traits."""
 
-        return {'production_preferences': tuple(np.random.permutation(np.arange(self.n_goods))),
+
+        n_accepted_exchanges = np.random.randint(1, len(self.all_possible_exchanges))
+        accepted_exchanges = np.random.permutation(self.all_possible_exchanges)[:n_accepted_exchanges]
+
+        production_preferences = self.all_possible_production_preferences[index % len(self.all_possible_production_preferences)]
+
+        return {'production_preferences': production_preferences,
                 'production_diversity': np.random.randint(1, self.n_goods + 1),
-                'goods_to_buy': tuple(np.random.choice(np.arange(self.n_goods), replace=False,
-                                      size=np.random.randint(1, self.n_goods + 1))),
-                'goods_to_sell': tuple(np.random.choice(np.arange(self.n_goods), replace=False,
-                                       size=np.random.randint(1, self.n_goods + 1)))}
+                'accepted_exchanges': accepted_exchanges}
 
 
         ## Evolutionary functions ##

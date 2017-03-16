@@ -22,6 +22,8 @@ class Economy(object):
         self.p_mutation = p_mutation
         self.n_mating = int(mating_rate * self.n_agents)
 
+        # --- For agent creation --- #
+        self.all_possible_exchanges = list(it.permutations(np.arange(self.n_goods), r=2))
         self.agents = self.create_agents()
 
         self.diversity_quantity_mapping = create_diversity_quantity_mapping(n=n_goods)
@@ -36,9 +38,10 @@ class Economy(object):
             "fitness": [],
             "production_diversity": [],
             "n_producers": [],
-            "n_market_agents": [],
-            "n_exchanges_t": [],
+            # "n_market_agents": [],
+            # "n_exchanges_t": [],
             "n_goods_intervention": [],
+            "production": []
         }
 
         # ----- For periodic backup ----- #
@@ -91,12 +94,13 @@ class Economy(object):
 
     def get_agent_random_strategic_attributes(self):
 
+        production_diversity = np.random.randint(1, self.n_goods + 1)
+        accepted_exchanges = [tuple(i) for i in np.random.permutation(
+            self.all_possible_exchanges)[:np.random.randint(1, len(self.all_possible_exchanges))]]
+
         return {
-            "production_diversity": np.random.randint(1, self.n_goods + 1),
-            "goods_to_buy": np.random.choice(np.arange(self.n_goods),
-                                             size=np.random.randint(1, self.n_goods + 1), replace=False),
-            "goods_to_sell": np.random.choice(np.arange(self.n_goods),
-                                              size=np.random.randint(1, self.n_goods + 1), replace=False)
+            "production_diversity": production_diversity,
+            "accepted_exchanges": accepted_exchanges
         }
 
     def prepare_new_generation(self):
@@ -117,36 +121,37 @@ class Economy(object):
 
             # ---------- MANAGE EXCHANGES ----- #
 
-            n_exchanges_t = 0   # For stats
+            # n_exchanges_t = 0   # For stats
             for i, j in utils.derangement(market_agents):
-                n_exchanges_t += self.make_encounter(i, j)
+                # n_exchanges_t += self.make_encounter(i, j)
+                self.make_encounter(i, j)
 
             # Each agent consumes at the end of each round and adapt his behavior (or not).
             for i in market_agents:
                 self.agents[i].consume()
 
-            # ----------------- #
-            # ---- STATS ------ #
-
-            self.back_up["n_exchanges_t"].append(n_exchanges_t)
-
-            # ---------------- #
-            # ---------------- #
+            # # ----------------- #
+            # # ---- STATS ------ #
+            #
+            # self.back_up["n_exchanges_t"].append(n_exchanges_t)
+            #
+            # # ---------------- #
+            # # ---------------- #
 
     def make_encounter(self, i, j):
 
-        exchange_takes_place = 0
+        # exchange_takes_place = 0
+        exchange = None
 
-        possible_exchange_i = {(x, y) for x, y in it.product(self.agents[i].goods_to_sell, self.agents[i].goods_to_buy)
-                               if x != y and self.agents[i].stock[x] > 1}
-        possible_exchange_j = {(y, x) for x, y in it.product(self.agents[j].goods_to_sell, self.agents[j].goods_to_buy)
-                               if x != y and self.agents[j].stock[x] > 1}
+        for x, y in self.agents[i].accepted_exchanges:
 
-        points_of_agreement = possible_exchange_i.intersection(possible_exchange_j)
+            if self.agents[i].stock[x] > 1 \
+                    and self.agents[j].stock[y] > 1 \
+                    and (y, x) in self.agents[j].accepted_exchanges:
 
-        if len(points_of_agreement):
+                exchange = (x, y)
 
-            exchange = [i for i in points_of_agreement][np.random.choice(len(points_of_agreement))]
+        if exchange is not None:
 
             # ...exchange occurs
             self.agents[i].proceed_to_exchange(exchange)
@@ -159,11 +164,12 @@ class Economy(object):
             self.temp_back_up["n_exchanges"] += 1
             for e in exchange:
                 self.temp_back_up["n_goods_intervention"][e] += 1
-            exchange_takes_place = 1
+            # exchange_takes_place = 1
 
             # ---------------- #
             # ---------------- #
-        return exchange_takes_place
+
+        # return exchange_takes_place
 
     # --------------------------------------------------------------------------------------- #
     # --------------------------- EVOLUTIONARY PART ----------------------------------------- #
@@ -259,16 +265,18 @@ class Economy(object):
         # Keep a trace of fitness
         fitness = 0
         n_producers = np.zeros(self.n_goods)
+        global_production = np.zeros(self.n_goods)
         for i in range(self.n_agents):
             fitness += self.agents[i].fitness
-            produced_goods = self.agents[i].get_produced_goods()
+            produced_goods, production = self.agents[i].get_production_stats()
             for j in produced_goods:
                 n_producers[j] += 1
+            global_production += production
 
         fitness /= self.n_agents
 
-        # Keep a trace of number of agents in market
-        self.back_up["n_market_agents"].append(len(self.market_agents))
+        # # Keep a trace of number of agents in market
+        # self.back_up["n_market_agents"].append(len(self.market_agents))
 
         # Keep a trace of production diversity
         average_production_diversity = np.mean([a.production_diversity for a in self.agents])
@@ -288,6 +296,7 @@ class Economy(object):
         self.back_up["production_diversity"].append(average_production_diversity)
         self.back_up["n_producers"].append(n_producers)
         self.back_up["n_goods_intervention"].append(self.temp_back_up["n_goods_intervention"].copy())
+        self.back_up["production"].append(global_production)
 
         self.reinitialize_backup_containers()
 

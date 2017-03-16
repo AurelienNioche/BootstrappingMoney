@@ -1,4 +1,3 @@
-import numpy as np
 from pylab import plt
 from os import path
 import itertools as it
@@ -66,7 +65,7 @@ def plot(results, parameters, fig_name):
 
         ax.plot(x, y[exchange_idx], label="Exchange {}".format(type_of_exchanges[exchange_idx]), linewidth=line_width)
 
-    ax.legend()
+    ax.legend(fontsize=8)
 
     # NUMBER OF EXCHANGES GENERATION
 
@@ -97,7 +96,7 @@ def plot(results, parameters, fig_name):
 
         ax.plot(x, y[key], label="Good {}".format(key), linewidth=line_width)
 
-    ax.legend()
+    ax.legend(fontsize=8)
 
     # DIVERSITY OF PRODUCTION
 
@@ -120,26 +119,40 @@ def plot(results, parameters, fig_name):
         x = range(len(y))
         ax.plot(x, y, linewidth=line_width, label="Good {}".format(i))
 
-    ax.legend()
+    ax.legend(fontsize=8)
+
+    # GLOBAL PRODUCTION
+
+    n_goods = len(results["production"][0])
+
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Global production for each good \n")
+
+    for i in range(n_goods):
+        y = [j[i] for j in results["production"]]
+        x = range(len(y))
+        ax.plot(x, y, linewidth=line_width, label="Good {}".format(i))
+
+    ax.legend(fontsize=8)
 
     # ----- FOR EACH PERIOD ------ #
 
-    # N MARKETS AGENTS T
-    x = range(len(results["n_market_agents"]))
-    y = results["n_market_agents"]
+    # # N MARKETS AGENTS T
+    # x = range(len(results["n_market_agents"]))
+    # y = results["n_market_agents"]
+    #
+    # ax = plt.subplot(n_lines, n_columns, next(counter))
+    # ax.set_title("Total number of agents frequenting market according to $t$\n")
+    # ax.plot(x, y, linewidth=line_width)
 
-    ax = plt.subplot(n_lines, n_columns, next(counter))
-    ax.set_title("Total number of agents frequenting market according to $t$\n")
-    ax.plot(x, y, linewidth=line_width)
-
-    # N EXCHANGES T
-    x = range(len(results["n_exchanges_t"]))
-    y = results["n_exchanges_t"]
-
-    ax = plt.subplot(n_lines, n_columns, next(counter))
-    ax.set_title("Total number of exchanges\n"
-                 "according to $t$ \n")
-    ax.plot(x, y, linewidth=line_width)
+    # # N EXCHANGES T
+    # x = range(len(results["n_exchanges_t"]))
+    # y = results["n_exchanges_t"]
+    #
+    # ax = plt.subplot(n_lines, n_columns, next(counter))
+    # ax.set_title("Total number of exchanges\n"
+    #              "according to $t$ \n")
+    # ax.plot(x, y, linewidth=line_width)
 
     # ------ PARAMETERS ----- #
 

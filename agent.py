@@ -5,13 +5,12 @@ class Agent(object):
 
     name = "Agent"
 
-    def __init__(self, production_preferences, production_diversity, goods_to_sell, goods_to_buy, n_goods, idx):
+    def __init__(self, production_preferences, production_diversity, accepted_exchanges, n_goods, idx):
 
         self.production_preferences = production_preferences
         self.production_diversity = production_diversity
 
-        self.goods_to_sell = goods_to_sell
-        self.goods_to_buy = goods_to_buy
+        self.accepted_exchanges = accepted_exchanges
 
         self.n_goods = n_goods
 
@@ -21,6 +20,7 @@ class Agent(object):
 
         self.fitness = 0
         self.produced_goods = []
+        self.production = np.zeros(self.n_goods)
 
     def produce(self, diversity_quantity_mapping):
 
@@ -29,10 +29,10 @@ class Agent(object):
         self.produced_goods = self.production_preferences[:self.production_diversity]
         assert len(self.produced_goods), "At least one type of good is produced."
 
-        prod = np.zeros(self.n_goods)
-        prod[self.produced_goods] = quantity_produced
+        self.production[:] = 0
+        self.production[self.produced_goods] = quantity_produced
 
-        self.stock += prod
+        self.stock += self.production
 
     def consume(self):
 
@@ -50,28 +50,15 @@ class Agent(object):
 
         all_attr = vars(self).copy()
 
-        for i in ["n_goods", "stock", "fitness", "produced_goods", "production_preferences", "idx"]:
+        for i in ["n_goods", "stock", "fitness", "produced_goods", "production", "production_preferences", "idx"]:
             all_attr.pop(i)
 
         return all_attr
 
-    def get_produced_goods(self):
+    def get_production_stats(self):
 
-        return self.produced_goods
-
-
-def create_agent(n_goods=3, idx=0):
-
-    return Agent(
-        n_goods=n_goods,
-        production_preferences=np.random.permutation(np.arange(n_goods)),
-        production_diversity=np.random.randint(1, n_goods + 1),
-        goods_to_buy=np.random.choice(np.arange(n_goods), size=np.random.randint(1, n_goods + 1), replace=False),
-        goods_to_sell=np.random.choice(np.arange(n_goods), size=np.random.randint(1, n_goods + 1), replace=False),
-        idx=idx)
-
+        return self.produced_goods, self.production
 
 if __name__ == "__main__":
 
-    a = create_agent()
-    print(vars(a))
+    pass

@@ -1,7 +1,9 @@
 import numpy as np
+from timeit import timeit
 
 
-def derangement(a, max_tries=10**6):
+def derangement(array_like, max_tries=10**6):
+
     """Generate a derangement of `a`
 
     A derangement is a permutation of the elements of `a` where no element keeps
@@ -9,11 +11,11 @@ def derangement(a, max_tries=10**6):
     To avoid an infinite loop, will raise ValueError if more than `max_tries`
     permutations have been tried unsuccesfully.
 
-    :param a:  array-like structure, of elements distinct enough to be deranged.
+    :param array_like:  array-like structure, of elements distinct enough to be deranged.
     """
-    assert len(a) > 1
+    assert len(array_like) > 1
 
-    a = np.array(a)  # O(1) if `a` is already an np.array
+    a = np.array(array_like)  # O(1) if `a` is already an np.array
     b = a.copy()
     np.random.shuffle(a)
     np.random.shuffle(b)
@@ -26,26 +28,8 @@ def derangement(a, max_tries=10**6):
 
     return zip(a, b)
 
-# def derangement(array_like):
-#
-#     assert len(array_like) > 1
-#
-#     a = list(array_like)
-#     b = list(array_like)
-#
-#     while True:
-#         error = 0
-#         a = np.random.permutation(a)
-#         b = np.random.permutation(b)
-#         for i, j in zip(a, b):
-#             if i == j:
-#                 error = 1
-#                 break
-#         if not error:
-#             break
-#
-#     return zip(a, b)
-
 if __name__ == "__main__":
 
-    print(list(derangement([1, 2, 3])))
+    # print(list(derangement([1, 2, 3])))
+    print(timeit("derangement(np.arange(1000))", setup="import numpy as np; from __main__ import derangement", number=10**4))
+    print(timeit("derangement(np.arange(1000))", setup="import numpy as np; from cmodule.cutils import derangement", number=10**4))

@@ -1,26 +1,29 @@
 import numpy as np
-from time import time
+import itertools as it
+from timeit import timeit
 
 
-def f(x):
-    return x**2
-n = 1000
+def f(a, b):
 
-operations = 100
+    c = a.intersection(b)
 
-t0 = time()
-c = np.arange(n)[::-1]
-for i in range(operations):
-    c[:] = f(c)
 
-print("numpy time:", time() - t0)
+def g(c, d):
 
-t0 = time()
-c = list(range(n, 0, -1))
+    e = np.intersect1d(c, d)
 
-for i in range(operations):
-    print(i)
-    for j in range(len(c)):
-        c[j] = f(c[j])
 
-print("'list' time:", time() - t0)
+def init():
+    a = set(it.permutations(np.arange(100), r=2))
+    b = set(it.permutations(np.arange(50), r=2))
+
+    c = np.array(list(it.permutations(np.arange(100), r=2)), dtype=[('x', int, 1), ('y', int, 1)])
+    d = np.array(list(it.permutations(np.arange(50), r=2)), dtype=[('x', int, 1), ('y', int, 1)])
+
+    return a, b, c, d
+
+
+if __name__ == "__main__":
+
+    print(timeit("f(a, b)", setup="from __main__ import f, g, init; a, b, c, d = init()", number=10**4))
+    print(timeit("g(c, d)", setup="from __main__ import f, g, init; a, b, c, d = init()", number=10**4))

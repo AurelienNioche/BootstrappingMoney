@@ -23,7 +23,11 @@ class Economy(object):
         self.n_mating = int(mating_rate * self.n_agents)
 
         # --- For agent creation --- #
-        self.all_possible_exchanges = list(it.permutations(np.arange(self.n_goods), r=2))
+        self.all_possible_exchanges = list(it.permutations(range(self.n_goods), r=2))
+        self.all_possible_production_preferences = \
+            np.random.permutation(
+                list(it.permutations(range(self.n_goods), r=self.n_goods))
+            )
         self.agents = self.create_agents()
 
         self.diversity_quantity_mapping = create_diversity_quantity_mapping(n=n_goods)
@@ -67,6 +71,10 @@ class Economy(object):
 
         return self.back_up
 
+    # --------------------------------------------------------------------------------------- #
+    # --------------------------- AGENT CREATION PART --------------------------------------- #
+    # --------------------------------------------------------------------------------------- #
+
     def create_agents(self):
 
         agents = []
@@ -87,7 +95,8 @@ class Economy(object):
         return Agent(
             n_goods=self.n_goods,
             # Assume an agent doesn't choose production preferences
-            production_preferences=np.random.permutation(np.arange(self.n_goods)),
+            production_preferences=
+            self.all_possible_production_preferences[idx % len(self.all_possible_production_preferences)],
             idx=idx,
             **self.get_agent_random_strategic_attributes()
         )
@@ -102,6 +111,8 @@ class Economy(object):
             "production_diversity": production_diversity,
             "accepted_exchanges": accepted_exchanges
         }
+
+    # ---------------------------------------------------------------------------- #
 
     def prepare_new_generation(self):
 

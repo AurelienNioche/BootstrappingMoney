@@ -1,5 +1,5 @@
 import numpy as np
-from economy import Economy
+from bootstrapmoney import Economy
 from graph import graph
 
 

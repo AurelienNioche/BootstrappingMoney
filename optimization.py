@@ -1,6 +1,6 @@
 import numpy as np
 from hyperopt import fmin, tpe, hp
-from economy import Economy
+from bootstrapmoney import Economy
 
 
 def fun(args):

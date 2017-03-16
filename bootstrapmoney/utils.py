@@ -4,9 +4,9 @@ from timeit import timeit
 
 def derangement(array_like, max_tries=10**6):
 
-    """Generate a derangement of `a`
+    """Generate a derangement of `array_like`
 
-    A derangement is a permutation of the elements of `a` where no element keeps
+    A derangement is a permutation of the elements of `array_like` where no element keeps
     its place. This method will generate permutations until a good one is found.
     To avoid an infinite loop, will raise ValueError if more than `max_tries`
     permutations have been tried unsuccesfully.
@@ -28,8 +28,7 @@ def derangement(array_like, max_tries=10**6):
 
     return zip(a, b)
 
-if __name__ == "__main__":
 
-    # print(list(derangement([1, 2, 3])))
+if __name__ == "__main__":
     print(timeit("derangement(np.arange(1000))", setup="import numpy as np; from __main__ import derangement", number=10**4))
     print(timeit("derangement(np.arange(1000))", setup="import numpy as np; from cmodule.cutils import derangement", number=10**4))

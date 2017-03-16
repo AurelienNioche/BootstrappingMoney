@@ -3,9 +3,9 @@ import itertools as it
 import numpy as np
 from tqdm import tqdm
 
-import utils
-from agent import Agent
-from diversity_quantity_mapping import create_diversity_quantity_mapping
+from . import utils
+from .agent import Agent
+from .diversity_quantity_mapping import create_diversity_quantity_mapping
 
 
 class Economy(object):

@@ -18,7 +18,11 @@ class Agent(object):
         self.produced_goods = []
 
     def seller(self):
-        return any(stock > 1)
+        return any(self.stock > 1)
+
+    @property
+    def accepted_exchanges(self):
+        return self.traits['accepted_exchanges']
 
     def produce(self, diversity_quantity_mapping):
         prod_div   = self.traits['production_diversity']
@@ -26,7 +30,7 @@ class Agent(object):
 
         quantity_produced = diversity_quantity_mapping[prod_div]
         assert quantity_produced > 0, "At least a quantity of one is produced."
-        self.produced_goods = prod_prefs[:prod_div]
+        self.produced_goods = np.array(prod_prefs[:prod_div])
         assert len(self.produced_goods) > 0, "At least one type of good is produced."
 
         self.production[:] = 0

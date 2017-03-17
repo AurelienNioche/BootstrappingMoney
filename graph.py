@@ -81,20 +81,18 @@ def plot(results, parameters, fig_name):
     x_max = len(results["n_exchanges"])
     x = range(x_max)
     y = []
-    for i in range(len(results["n_goods_intervention"][0].keys())):
+    for good, n_interventions in enumerate(results["n_goods_intervention"][0]):
         y.append([])
 
-    for i in range(x_max):
-
-        for key in results["n_goods_intervention"][0].keys():
-            y[key].append(results["n_goods_intervention"][i][key])
+    for goods_interventions in results["n_goods_intervention"]:
+        for good, n_interventions in enumerate(goods_interventions):
+            y[good].append(n_interventions)
 
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Number of interventions of each good\naccording to number of generations\n")
 
-    for key in results["n_goods_intervention"][0].keys():
-
-        ax.plot(x, y[key], label="Good {}".format(key), linewidth=line_width)
+    for good, n_interventions in enumerate(results["n_goods_intervention"][0]):
+        ax.plot(x, y[good], label="Good {}".format(good), linewidth=line_width)
 
     ax.legend(fontsize=8)
 

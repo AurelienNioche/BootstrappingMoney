@@ -2,7 +2,7 @@ import numpy as np
 
 from tqdm import tqdm
 
-from . import economy, population
+from . import economy, population, history
 
 
 class Model:
@@ -16,12 +16,14 @@ class Model:
         self.params = params
 
         np.random.seed(self.params['random_seed'])
+        self.history    = history.History(params)
         self.population = population.Population(params)
-        self.economy    = economy.Economy(params, self.population)
+        self.economy    = economy.Economy(params, self.population, self.history)
 
     def run(self):
-        for _ in tqdm(range(self.n_generations)):
+        for _ in tqdm(range(self.params['n_generations'])):
             self.population.reset_agents()
             for p in range(self.params['n_periods_per_generation']):
-                self.economy.update()
+                self.economy.time_step()
+            self.history.end_generation(self.population.agents)
             self.population.evolve_agents()

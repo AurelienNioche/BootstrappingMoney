@@ -1,1 +1,1 @@
-from .economy import Economy
+from .model import Model

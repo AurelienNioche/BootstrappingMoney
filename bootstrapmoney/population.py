@@ -2,6 +2,8 @@ import itertools
 
 import numpy as np
 
+from .agent import Agent
+
 
 def create_diversity_quantity_mapping(n):
 
@@ -22,18 +24,19 @@ def create_diversity_quantity_mapping(n):
 
 class Population:
 
-    def __init__(self, params, p_mutation, mating_rate):
+    def __init__(self, params):
         self.params = params
 
+        self.n_goods    = params['n_goods']
         self.n_agents   = params['n_agents']
         self.p_mutation = params['p_mutation']
-        self.n_mating   = int(mating_rate * self.n_agents)
+        self.n_mating   = int(params['mating_rate'] * self.n_agents)
 
-        self.all_possible_exchanges = [tuple(p) for p in itertools.permutations(range(self.n_goods), r=2))]
-        self.all_possible_production_preferences = np.random.permutation(
-            tuple(p) for p in itertools.permutations(range(self.n_goods), r=self.n_goods))
+        self.all_possible_exchanges = [tuple(p) for p in itertools.permutations(range(self.n_goods), r=2)]
+        self.all_possible_production_preferences = [tuple(p) for p in itertools.permutations(range(self.n_goods))]
+        np.random.shuffle(self.all_possible_production_preferences)
 
-        self.agents = self.create_population()
+        self.create_population()
 
         self.diversity_quantity_mapping = create_diversity_quantity_mapping(self.n_goods)
 
@@ -41,8 +44,8 @@ class Population:
         return self.n_agents
 
     def sellers(self):
-        """Agents that have more than one instance of at least one good.""""
-        return (agent for agent in self.agents if agent.seller())
+        """Agents that have more than one instance of at least one good."""
+        return [agent for agent in self.agents if agent.seller()]
 
     def create_population(self):
         self.agents = [self.create_agent(index) for index in range(len(self))]
@@ -50,7 +53,7 @@ class Population:
     def create_agent(self, index, traits=None):
         """Create an agent with random traits"""
         if traits is None:
-            traits = self._random_traits()
+            traits = self._random_traits(index)
         return Agent(traits, index=index)
 
     def _random_traits(self, index):
@@ -69,7 +72,7 @@ class Population:
 
         ## Evolutionary functions ##
 
-    def reset_agents(self, diversity_quantity_mapping):
+    def reset_agents(self):
         """Reset the state of all agents. Called to prepare each new generation."""
         for agent in self.agents:
             agent.stock[:] = 0
@@ -92,8 +95,8 @@ class Population:
 
         prod_pref_sets = {} # sets of agents with the same production preferences.
         for a in self.agents: # important in case of equal fitness #HUGH?
-            prod_pref_sets.setdefault(a.production_preferences, [])
-            prod_pref_sets[a.production_preferences].append(a)
+            prod_pref_sets.setdefault(a.traits['production_preferences'], [])
+            prod_pref_sets[a.traits['production_preferences']].append(a)
         prod_pref_sets = list(prod_pref_sets.values()) # converting to lists
 
 
@@ -105,7 +108,7 @@ class Population:
         for agent_set in sets_to_evolve:
             agent_set.sort(key=lambda x: x.fitness)
             reproduction_pairs.extend(zip(np.random.permutation(agent_set[:-len(agent_set)//2]),
-                                          np.random.permutation(agent_set[len(agent_set)//2:]))
+                                          np.random.permutation(agent_set[len(agent_set)//2:])))
         return reproduction_pairs
 
     def reproduce(self, agent, index):
@@ -114,7 +117,7 @@ class Population:
         :param agent:  the agent to be reproduced.
         :param index:  the destination index for the new agent.
         """
-        new_traits = self._random_traits()
+        new_traits = self._random_traits(index)
         p_mutate = np.random.random(len(agent.traits))
 
         for key, p_i in zip(agent.traits.keys(), p_mutate):

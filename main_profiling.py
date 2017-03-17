@@ -1,5 +1,5 @@
 import numpy as np
-from economy import Economy
+from bootstrapmoney import Model
 
 
 def main():
@@ -16,9 +16,9 @@ def main():
         "mating_rate": 0.3
     }
 
-    e = Economy(**parameters)
+    model = Model(parameters)
 
-    e.run()
+    model.run()
 
 if __name__ == "__main__":
 

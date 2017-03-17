@@ -89,5 +89,9 @@ ENV/
 .ropeproject
 .idea/
 report.txt
-oldies.py
 draft.py
+Comments.key
+cmodule/
+makefile.sh
+setup.py
+toKeep/

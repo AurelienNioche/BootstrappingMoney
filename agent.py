@@ -5,41 +5,33 @@ class Agent(object):
 
     name = "Agent"
 
-    def __init__(self, production_preferences, production_diversity, accepted_exchanges, n_goods, idx):
+    def __init__(self, u, production, production_advantages, accepted_exchanges, production_costs, n_goods, idx):
 
-        self.production_preferences = production_preferences
-        self.production_diversity = production_diversity
+        self.n_goods = n_goods
+        self.idx = idx
+        self.stock = np.zeros(self.n_goods, dtype=int)
+
+        self.production = np.asarray(production, dtype=int)
+        self.production_advantages = np.asarray(production_advantages)
+        self.production_costs = np.asarray(production_costs)
 
         self.accepted_exchanges = accepted_exchanges
 
-        self.n_goods = n_goods
+        self.u = u
 
-        self.idx = idx
-
-        self.stock = np.zeros(self.n_goods)
-
+        self.n_consumption = 0
         self.fitness = 0
-        self.produced_goods = []
-        self.production = np.zeros(self.n_goods)
 
-    def produce(self, diversity_quantity_mapping):
-
-        quantity_produced = diversity_quantity_mapping[self.production_diversity]
-        assert quantity_produced, "At least a quantity of one is produced."
-        self.produced_goods = self.production_preferences[:self.production_diversity]
-        assert len(self.produced_goods), "At least one type of good is produced."
-
-        self.production[:] = 0
-        self.production[self.produced_goods] = quantity_produced
+    def produce(self):
 
         self.stock += self.production
 
     def consume(self):
 
-        n_consumption = np.min(self.stock)
+        n_consumption_t = min(self.stock)
 
-        self.stock[:] -= n_consumption
-        self.fitness += n_consumption
+        self.stock[:] -= n_consumption_t
+        self.n_consumption += n_consumption_t
 
     def proceed_to_exchange(self, exchange):
 
@@ -48,16 +40,32 @@ class Agent(object):
 
     def get_strategic_attributes(self):
 
-        all_attr = vars(self).copy()
+        str_attributes = {
+            "production": self.production,
+            "accepted_exchanges": self.accepted_exchanges
+        }
 
-        for i in ["n_goods", "stock", "fitness", "produced_goods", "production", "production_preferences", "idx"]:
-            all_attr.pop(i)
+        return str_attributes
 
-        return all_attr
+    def compute_fitness(self):
 
-    def get_production_stats(self):
+        pos = self.u * self.n_consumption
+        neg = 0
+        for i in range(self.n_goods):
+            neg += self.production[i] * self.production_costs[i] * self.production_advantages[i]
 
-        return self.produced_goods, self.production
+        self.fitness = \
+            pos - neg
+
+    def get_production(self):
+
+        return self.production
+
+    def reset(self):
+
+        self.stock[:] = 0
+        self.fitness = 0
+        self.n_consumption = 0
 
 if __name__ == "__main__":
 

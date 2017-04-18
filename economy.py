@@ -5,12 +5,12 @@ from tqdm import tqdm
 
 import utils
 from agent import Agent
-from diversity_quantity_mapping import create_diversity_quantity_mapping
 
 
 class Economy(object):
 
     def __init__(self, n_generations, n_periods_per_generation, n_goods, n_agents,
+                 production_advantages, production_costs, u, max_production,
                  p_mutation, mating_rate, random_seed):
 
         np.random.seed(random_seed)
@@ -24,14 +24,15 @@ class Economy(object):
 
         # --- For agent creation --- #
         self.all_possible_exchanges = list(it.permutations(range(self.n_goods), r=2))
-        self.all_possible_production_preferences = \
+        self.all_possible_production_advantages = \
             np.random.permutation(
-                list(it.permutations(range(self.n_goods), r=self.n_goods))
+                list(it.permutations(production_advantages, r=self.n_goods))
             )
-        self.agents = self.create_agents()
+        self.production_costs = production_costs
+        self.max_production = max_production
+        self.u = u
 
-        self.diversity_quantity_mapping = create_diversity_quantity_mapping(n=n_goods)
-        print("Diversity quantity mapping:", self.diversity_quantity_mapping)
+        self.agents = self.create_agents()
 
         self.market_agents = None
 
@@ -66,6 +67,9 @@ class Economy(object):
 
                 self.time_step()
 
+            for i in range(self.n_agents):
+                self.agents[i].compute_fitness()
+
             self.make_a_backup()
             self.reproduce_agents()
 
@@ -95,20 +99,23 @@ class Economy(object):
         return Agent(
             n_goods=self.n_goods,
             # Assume an agent doesn't choose production preferences
-            production_preferences=
-            self.all_possible_production_preferences[idx % len(self.all_possible_production_preferences)],
+            production_advantages=
+            self.all_possible_production_advantages[idx % len(self.all_possible_production_advantages)],
+            production_costs=self.production_costs,
+            u=self.u,
             idx=idx,
             **self.get_agent_random_strategic_attributes()
         )
 
     def get_agent_random_strategic_attributes(self):
 
-        production_diversity = np.random.randint(1, self.n_goods + 1)
+        production = np.random.randint(0, self.max_production+1, size=self.n_goods)
+
         accepted_exchanges = [tuple(i) for i in np.random.permutation(
             self.all_possible_exchanges)[:np.random.randint(1, len(self.all_possible_exchanges))]]
 
         return {
-            "production_diversity": production_diversity,
+            "production": production,
             "accepted_exchanges": accepted_exchanges
         }
 
@@ -117,9 +124,8 @@ class Economy(object):
     def prepare_new_generation(self):
 
         for i in range(self.n_agents):
-            self.agents[i].stock[:] = 0
-            self.agents[i].fitness = 0
-            self.agents[i].produce(self.diversity_quantity_mapping)
+            self.agents[i].reset()
+            self.agents[i].produce()
             self.agents[i].consume()
 
         self.market_agents = [i for i in range(self.n_agents)]
@@ -203,51 +209,43 @@ class Economy(object):
         data = dict()
 
         for a in np.random.permutation(self.agents):  # Permutation is important in case of equal fitness
-            prod_pref = tuple(a.production_preferences)
-            if prod_pref not in data.keys():
-                data[prod_pref] = {
+            prod_advantage = tuple(a.production_advantages)
+            if prod_advantage not in data.keys():
+                data[prod_advantage] = {
                     "idx": [],
                     "fitness": []
                 }
-            data[prod_pref]["idx"].append(a.idx)
-            data[prod_pref]["fitness"].append(a.fitness)
+            data[prod_advantage]["idx"].append(a.idx)
+            data[prod_advantage]["fitness"].append(a.fitness)
 
         # ---- #
 
-        production_preferences = [i for i in data.keys()]
+        prod_advantages = np.random.permutation(self.all_possible_production_advantages)
 
-        p = [len(data[i]["idx"]) / self.n_agents for i in production_preferences]
+        for i in range(self.n_mating):
 
-        prod_pref_idx_list = \
-            np.random.choice(
-                np.arange(len(production_preferences)),
-                p=p,
-                size=self.n_mating)
+            prod_advantage = tuple(prod_advantages[i % len(prod_advantages)])
 
-        for i in prod_pref_idx_list:
+            if len(data[prod_advantage]["idx"]) > 1:
 
-            prod_pref = production_preferences[i]
-
-            if len(data[prod_pref]["idx"]) > 1:
-
-                idx_with_best_fitness = np.argmax(data[prod_pref]["fitness"])
-                idx_with_worse_fitness = np.argmin(data[prod_pref]["fitness"])
+                idx_with_best_fitness = np.argmax(data[prod_advantage]["fitness"])
+                idx_with_worse_fitness = np.argmin(data[prod_advantage]["fitness"])
 
                 selected_to_be_copied.append(
-                    data[prod_pref]["idx"][
+                    data[prod_advantage]["idx"][
                         idx_with_best_fitness
                     ]
                 )
 
                 selected_to_be_changed.append(
-                    data[prod_pref]["idx"][
+                    data[prod_advantage]["idx"][
                         idx_with_worse_fitness
                     ]
                 )
 
                 for j, idx in enumerate([idx_with_best_fitness, idx_with_worse_fitness]):
-                    data[prod_pref]["fitness"].pop(idx - j)
-                    data[prod_pref]["idx"].pop(idx - j)
+                    data[prod_advantage]["fitness"].pop(idx - j)
+                    data[prod_advantage]["idx"].pop(idx - j)
 
         return selected_to_be_copied, selected_to_be_changed
 
@@ -277,11 +275,15 @@ class Economy(object):
         fitness = 0
         n_producers = np.zeros(self.n_goods)
         global_production = np.zeros(self.n_goods)
+
         for i in range(self.n_agents):
+
             fitness += self.agents[i].fitness
-            produced_goods, production = self.agents[i].get_production_stats()
-            for j in produced_goods:
-                n_producers[j] += 1
+
+            production = self.agents[i].get_production()
+            for j in range(self.n_goods):
+                if production[j] > 0:
+                    n_producers[j] += 1
             global_production += production
 
         fitness /= self.n_agents
@@ -290,7 +292,8 @@ class Economy(object):
         # self.back_up["n_market_agents"].append(len(self.market_agents))
 
         # Keep a trace of production diversity
-        average_production_diversity = np.mean([a.production_diversity for a in self.agents])
+        production_diversity = [sum(a.production != 0) for a in self.agents]
+        average_production_diversity = np.mean(production_diversity)
 
         # Keep a trace of exchanges
         for key in self.temp_back_up["exchanges"].keys():

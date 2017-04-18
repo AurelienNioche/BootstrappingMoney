@@ -1,17 +1,12 @@
 from pylab import plt
 from os import path
 import itertools as it
+from datetime import datetime
 
 
 def get_fig_name(name, folder="~/Desktop/"):
 
-    fig_name = path.expanduser("{}{}.pdf".format(folder, name))
-
-    init_fig_name = fig_name.split(".")[0]
-    i = 2
-    while path.exists(fig_name):
-        fig_name = "{}{}.pdf".format(init_fig_name, i)
-        i += 1
+    fig_name = path.expanduser("{}{}{}.pdf".format(folder, name, datetime.now().strftime("%Y%m%d%H%M%S%f")))
 
     return fig_name
 
@@ -135,25 +130,6 @@ def plot(results, parameters, fig_name):
 
     ax.legend(fontsize=8)
 
-    # ----- FOR EACH PERIOD ------ #
-
-    # # N MARKETS AGENTS T
-    # x = range(len(results["n_market_agents"]))
-    # y = results["n_market_agents"]
-    #
-    # ax = plt.subplot(n_lines, n_columns, next(counter))
-    # ax.set_title("Total number of agents frequenting market according to $t$\n")
-    # ax.plot(x, y, linewidth=line_width)
-
-    # # N EXCHANGES T
-    # x = range(len(results["n_exchanges_t"]))
-    # y = results["n_exchanges_t"]
-    #
-    # ax = plt.subplot(n_lines, n_columns, next(counter))
-    # ax.set_title("Total number of exchanges\n"
-    #              "according to $t$ \n")
-    # ax.plot(x, y, linewidth=line_width)
-
     # ------ PARAMETERS ----- #
 
     # 5th subplot: PARAMETERS
@@ -163,7 +139,7 @@ def plot(results, parameters, fig_name):
 
     msg = ""
     for key in sorted(parameters.keys()):
-        msg += "{}: {}; \n\n".format(key, parameters[key])
+        msg += "{}: {}; \n".format(key, parameters[key])
 
     ax.text(0.5, 0.5, msg, ha='center', va='center', size=12)
 
@@ -174,7 +150,7 @@ def plot(results, parameters, fig_name):
     plt.close()
 
 
-def graph(results, parameters):
+def graph(results, parameters, root_name):
 
-    fig_name = get_fig_name(name="MoneyBootstrapping")
+    fig_name = get_fig_name(name=root_name)
     plot(results, parameters, fig_name)

@@ -28,6 +28,14 @@ def derangement(array_like, max_tries=10**6):
 
     return zip(a, b)
 
+
+def constrained_sum_sample(n, total):
+    """Return a randomly chosen list of n positive integers summing to total.
+    Each such list is equally likely to occur."""
+
+    dividers = sorted(np.random.randint(1, total, size=n - 1))
+    return np.random.permutation([a - b for a, b in zip(dividers + [total], [0] + dividers)])
+
 if __name__ == "__main__":
 
     # print(list(derangement([1, 2, 3])))

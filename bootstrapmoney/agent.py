@@ -6,16 +6,18 @@ class Agent(object):
     name = "Agent"
 
     def __init__(self, traits, index):
-
         self.traits = traits
         self.index = index
         self.n_goods = len(self.traits['production_preferences'])
 
         # state variables
-        self.stock = np.zeros(self.n_goods)
-        self.production = np.zeros(self.n_goods)
+        self.stock      = np.zeros(self.n_goods, dtype=int)
+        self.production = np.zeros(self.n_goods, dtype=int)
         self.fitness = 0
         self.produced_goods = []
+
+    def __repr__(self):
+        return 'Agent_{}'.format(self.index)
 
     def seller(self):
         return any(self.stock > 1)

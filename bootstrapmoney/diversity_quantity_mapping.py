@@ -27,6 +27,7 @@ def create_diversity_quantity_mapping(n):
 
     return mapping
 
+
 if __name__ == "__main__":
 
     print(create_diversity_quantity_mapping(10))

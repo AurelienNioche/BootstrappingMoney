@@ -57,12 +57,13 @@ class History:
 
         self.reset_period_history()
 
-    def transaction_happens(self, transaction):
-        """A transaction as just happened
+    def transaction_happens(self, agent1, agent2, transaction):
+        """Record a transaction that just happened
 
+        :param agent1: the agent giving `x`, receiving `y`
+        :param agent2: the agent giving `y`, receiving `x`
         :param transaction:  a pair `(x, y)` with the good `x` and `y` being exchanged.
         """
-        # stats
         self._period_history["exchanges"][tuple(sorted(transaction))] += 1
         self._period_history["n_exchanges"] += 1
         for good in transaction:

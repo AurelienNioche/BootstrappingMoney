@@ -21,7 +21,7 @@ class Model:
         self.economy    = economy.Economy(params, self.population, self.history)
 
     def run(self):
-        for _ in tqdm(range(self.params['n_generations'])):
+        for t_gen in tqdm(range(self.params['n_generations'])):
             self.population.reset_agents()
             for p in range(self.params['n_periods_per_generation']):
                 self.economy.time_step()

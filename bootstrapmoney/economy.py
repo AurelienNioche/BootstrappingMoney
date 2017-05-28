@@ -27,8 +27,12 @@ class Economy(object):
             if (a_i.stock[x] > 1 and a_j.stock[y] > 1 and (y, x) in a_j.accepted_exchanges):
                 transaction = (x, y)
 
+        # # useful for debug
+        # K = sorted(set(a_i.accepted_exchanges).intersection([(y, x) for x, y in a_j.accepted_exchanges]))
+        # print('{}:{} <-> {}:{}: {} --- {}'.format(a_i.index, a_i.stock, a_j.index, a_j.stock, transaction, K))
+
         if transaction is not None: # exchange occurs
             a_i.exchange(transaction)
             a_j.exchange(list(reversed(transaction)))
 
-            self.history.transaction_happens(transaction)
+            self.history.transaction_happens(a_i, a_j, transaction)

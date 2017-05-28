@@ -3,23 +3,7 @@ import itertools
 import numpy as np
 
 from .agent import Agent
-
-
-def create_diversity_quantity_mapping(n):
-
-    mapping = [1]
-
-    f = lambda x: 2 * (x + 1) ** 2
-
-    for raw, diversity in enumerate(range(n - 1, 0, -1)):
-        previous_quantity_of_production = mapping[-1] * (diversity + 1)
-        result = round((previous_quantity_of_production + f(raw)) / diversity)
-        mapping.append(result)
-    mapping.append(0)
-    mapping.reverse()
-
-    return mapping
-
+from .diversity_quantity_mapping import create_diversity_quantity_mapping
 
 
 class Population:
@@ -30,7 +14,7 @@ class Population:
         self.n_goods    = params['n_goods']
         self.n_agents   = params['n_agents']
         self.p_mutation = params['p_mutation']
-        self.n_mating   = int(params['mating_rate'] * self.n_agents)
+        self.n_mating   = int(params['mating_rate'] * self.n_agents) #FIXME incoherent formula
 
         self.all_possible_exchanges = [tuple(p) for p in itertools.permutations(range(self.n_goods), r=2)]
         self.all_possible_production_preferences = [tuple(p) for p in itertools.permutations(range(self.n_goods))]
@@ -41,17 +25,18 @@ class Population:
         self.diversity_quantity_mapping = create_diversity_quantity_mapping(self.n_goods)
 
     def __len__(self):
-        return self.n_agents
+        return len(self.agents)
 
     def sellers(self):
         """Agents that have more than one instance of at least one good."""
         return [agent for agent in self.agents if agent.seller()]
 
     def create_population(self):
-        self.agents = [self.create_agent(index) for index in range(len(self))]
+        self.agents = [self.create_agent(index) for index in range(self.n_agents)]
 
     def create_agent(self, index, traits=None):
         """Create an agent with random traits"""
+
         if traits is None:
             traits = self._random_traits(index)
         return Agent(traits, index=index)
@@ -59,9 +44,9 @@ class Population:
     def _random_traits(self, index):
         """Create a random agent's traits."""
 
-
         n_accepted_exchanges = np.random.randint(1, len(self.all_possible_exchanges))
-        accepted_exchanges = np.random.permutation(self.all_possible_exchanges)[:n_accepted_exchanges]
+
+        accepted_exchanges = [tuple(e) for e in np.random.permutation(self.all_possible_exchanges)[:n_accepted_exchanges]]
 
         production_preferences = self.all_possible_production_preferences[index % len(self.all_possible_production_preferences)]
 
@@ -107,8 +92,8 @@ class Population:
         reproduction_pairs = []
         for agent_set in sets_to_evolve:
             agent_set.sort(key=lambda x: x.fitness)
-            reproduction_pairs.extend(zip(np.random.permutation(agent_set[:-len(agent_set)//2]),
-                                          np.random.permutation(agent_set[len(agent_set)//2:])))
+            reproduction_pairs.extend(zip(np.random.permutation(agent_set[len(agent_set)//2:]),
+                                          np.random.permutation(agent_set[:-len(agent_set)//2])))
         return reproduction_pairs
 
     def reproduce(self, agent, index):
@@ -121,7 +106,8 @@ class Population:
         p_mutate = np.random.random(len(agent.traits))
 
         for key, p_i in zip(agent.traits.keys(), p_mutate):
-            if p_i > self.p_mutation: # we keep this trait from the source agent.
+            if key != 'production_preferences' and np.random.random() > self.p_mutation: # we keep this trait from the source agent.
                 new_traits[key] = agent.traits[key]
 
+        assert self.agents[index].traits['production_preferences'] == new_traits['production_preferences']
         self.agents[index] = self.create_agent(index, traits=new_traits)

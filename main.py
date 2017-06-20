@@ -1,5 +1,5 @@
 import numpy as np
-from economy import Economy
+from bootstrapmoney import Model
 from graph import graph
 
 
@@ -17,10 +17,10 @@ def main():
         "mating_rate": 0.2
     }
 
-    e = Economy(**parameters)
+    model = Model(parameters)
 
-    backup = e.run()
-    graph(results=backup, parameters=parameters)
+    model.run()
+    graph(results=model.history.history, parameters=parameters)
 
 if __name__ == "__main__":
 

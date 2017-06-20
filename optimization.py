@@ -1,6 +1,6 @@
 import numpy as np
 from hyperopt import fmin, tpe, hp
-from economy import Economy
+from bootstrapmoney import Model
 
 
 def fun(args):
@@ -18,11 +18,10 @@ def fun(args):
         "p_mutation": 0.05
     }
 
-    e = Economy(**parameters)
+    model = Model(parameters)
+    model.run()
 
-    backup = e.run()
-
-    return np.mean(backup["production_diversity"][-10:])
+    return np.mean(model.history.history['production_diversity'][-10:])
 
 
 def main():

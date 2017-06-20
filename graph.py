@@ -174,5 +174,5 @@ def plot(results, parameters, fig_name):
 
 def graph(results, parameters):
 
-    fig_name = get_fig_name(name="MoneyBootstrapping")
+    fig_name = get_fig_name(name="MoneyBootstrapping_refactor")
     plot(results, parameters, fig_name)

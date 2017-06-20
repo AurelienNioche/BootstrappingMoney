@@ -25,5 +25,5 @@ class Model:
             self.population.reset_agents()
             for p in range(self.params['n_periods_per_generation']):
                 self.economy.time_step()
-            self.history.end_generation(self.population.agents)
+            self.history.end_generation(self.population)
             self.population.evolve_agents()

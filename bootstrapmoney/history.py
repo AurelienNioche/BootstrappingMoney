@@ -27,20 +27,21 @@ class History:
             "n_goods_intervention": [0 for _ in range(self.n_goods)]
         }
 
-    def end_generation(self, agents):
+    def end_generation(self, population):
+        agents = population.agents
 
         # Keep a trace of fitness
         fitness = 0
         n_producers       = np.zeros(self.n_goods)
         global_production = np.zeros(self.n_goods)
         for agent in agents:
-            fitness += agent.fitness
+            fitness += population.agent_fitness(agent)
             n_producers[agent.produced_goods] += 1
-            global_production += agent.production
+            global_production += agent.traits.production
         fitness /= len(agents)
 
         # Keep a trace of production diversity
-        average_production_diversity = np.mean([a.traits['production_diversity'] for a in agents])
+        average_production_diversity = np.mean([sum(a.traits.production != 0) for a in agents])
 
         # Keep a trace of exchanges
         for key in self._period_history["exchanges"].keys():

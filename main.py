@@ -1,4 +1,5 @@
 import numpy as np
+from os import path
 from economy import Economy
 from graph import graph
 from multiprocessing import Pool, cpu_count
@@ -7,23 +8,22 @@ from multiprocessing import Pool, cpu_count
 def compute(random_seed):
 
     parameters = {
-        "random_seed": random_seed,
-        "n_generations": 300,
-        "n_periods_per_generation": 50,
-        "n_goods": 3,
+        "mating_rate": 0.3,
+        "max_production": 10,
         "n_agents": 300,
-        "p_mutation": 0.01,
-        "mating_rate": 0.5,
-        "production_costs": [0.9, 0.6, 0.3],
-        "production_advantages": [1, 1/2, 1/4],
-        "max_production": 50,
-        "u": 1
+        "n_generations": 10**4,
+        "n_goods": 3,
+        "n_periods_per_generation": 5,
+        "p_mutation": 0.1,
+        "production_advantages": [4, 2, 0.5],
+        "production_costs": [4, 2, 2],
+        "random_seed": random_seed,
+        "u": 10
     }
 
     e = Economy(**parameters)
 
-    backup = e.run()
-    graph(results=backup, parameters=parameters, root_name="MoneyBootstrappingProductionCost")
+    return parameters, e.run()
 
 
 def main():
@@ -31,8 +31,12 @@ def main():
     random_seeds = np.random.randint(2320602665, size=cpu_count())
 
     pool = Pool(processes=cpu_count())
-    pool.map(compute, random_seeds)
 
+    results = pool.map(compute, random_seeds)
+    for parameters, backup in results:
+        print("Do graph.")
+        graph(results=backup, parameters=parameters,
+              root_folder=path.expanduser("~/Desktop/MoneyBootstrapping"), root_name="MB")
 
 if __name__ == "__main__":
 

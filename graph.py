@@ -1,12 +1,15 @@
 from pylab import plt
-from os import path
+from os import path, mkdir
 import itertools as it
 from datetime import datetime
 
 
-def get_fig_name(name, folder="~/Desktop/"):
+def get_fig_name(root_folder=path.expanduser("~/Desktop/MoneyBootstrapping"), root_name="MB"):
 
-    fig_name = path.expanduser("{}{}{}.pdf".format(folder, name, datetime.now().strftime("%Y%m%d%H%M%S%f")))
+    if not path.exists(root_folder):
+        mkdir(root_folder)
+
+    fig_name = "{}/{}_{}.pdf".format(root_folder, root_name, datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f"))
 
     return fig_name
 
@@ -15,6 +18,7 @@ def plot(results, parameters, fig_name):
 
     # What is common to all subplots
     fig = plt.figure(figsize=(25, 12))
+
     fig.patch.set_facecolor('white')
 
     line_width = 2
@@ -150,7 +154,7 @@ def plot(results, parameters, fig_name):
     plt.close()
 
 
-def graph(results, parameters, root_name):
+def graph(results, parameters, root_folder, root_name):
 
-    fig_name = get_fig_name(name=root_name)
+    fig_name = get_fig_name(root_folder=root_folder, root_name=root_name)
     plot(results, parameters, fig_name)

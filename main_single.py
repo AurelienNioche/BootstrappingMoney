@@ -1,12 +1,14 @@
 from economy import Economy
 from graph import graph
 
+from os import path
+
 
 random_seed = 460741801
 
 parameters = {
     "random_seed": random_seed,
-    "n_generations": 1000,
+    "n_generations": 500,
     "n_periods_per_generation": 50,
     "n_goods": 3,
     "n_agents": 300,
@@ -21,4 +23,5 @@ parameters = {
 e = Economy(**parameters)
 
 backup = e.run()
-graph(results=backup, parameters=parameters, root_name="MoneyBootstrappingProductionCost")
+graph(results=backup, parameters=parameters, root_name="MB",
+      root_folder=path.expanduser("~Desktop/MoneyBootstrapping"))

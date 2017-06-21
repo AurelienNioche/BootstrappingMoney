@@ -43,7 +43,7 @@ class Agent(object):
         self.stock += self.traits.production
 
     def consume(self):
-        n_consumed = np.min(self.stock)
+        n_consumed = min(self.stock)  # note: `min` faster than `np.min` for small arrays
         self.stock[:]  -= n_consumed
         self.consummed += n_consumed
 

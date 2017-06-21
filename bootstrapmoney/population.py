@@ -15,8 +15,8 @@ class Population:
         self.p_mutation = params['p_mutation']
         self.n_mating   = int(params['mating_rate'] * self.n_agents) #FIXME incoherent formula
 
-        self.all_possible_exchanges = [tuple(p) for p in itertools.permutations(range(self.n_goods), r=2)]
-        self.all_possible_production_difficulties = [tuple(p) for p in itertools.permutations(self.params['production_difficulty'])]
+        self.all_possible_exchanges = list(itertools.permutations(range(self.n_goods), r=2))
+        self.all_possible_production_difficulties = list(itertools.permutations(self.params['production_difficulty']))
         np.random.shuffle(self.all_possible_production_difficulties)
 
         self.create_population()
@@ -40,8 +40,8 @@ class Population:
     def _random_evolvable_traits(self, index):
         """Create a random agent's traits."""
         production = np.random.randint(0, self.params['max_production'] + 1, size=self.n_goods)
-        accepted_exchanges = [tuple(i) for i in np.random.permutation(
-            self.all_possible_exchanges)[:np.random.randint(1, len(self.all_possible_exchanges))]]
+        np.random.shuffle(self.all_possible_exchanges)
+        accepted_exchanges = self.all_possible_exchanges[:np.random.randint(1, len(self.all_possible_exchanges))]
 
         return {"production": production,
                 "accepted_exchanges": accepted_exchanges}
@@ -84,13 +84,19 @@ class Population:
         prod_diff_sets = list(prod_diff_sets.values()) # converting to lists
 
         # only self.n_mating sets will evolve
-        prod_diff_sets = np.random.permutation(prod_diff_sets)
+        np.random.shuffle(prod_diff_sets)
+
         for i in range(self.n_mating):
             reproduction_pairs = []
             agent_set = prod_diff_sets[i%len(prod_diff_sets)]
-            agent_set = sorted(agent_set, key=lambda agent: self.agent_fitness(agent))
-            reproduction_pairs.extend(zip(np.random.permutation(agent_set[len(agent_set)//2:]),
-                                          np.random.permutation(agent_set[:-len(agent_set)//2])))
+            agent_set.sort(key=lambda agent: self.agent_fitness(agent))
+            # dividing the agents in two classes: high fitness, and low fitness (i.e. to replace)
+            agents_to_imitate  = agent_set[len(agent_set)//2:]
+            np.random.shuffle(agents_to_imitate)
+            agents_to_replace = agent_set[:-len(agent_set)//2]
+            np.random.shuffle(agents_to_replace)
+            reproduction_pairs.extend(zip(agents_to_imitate, agents_to_replace))
+
         return reproduction_pairs
 
     def reproduce(self, agent, index):

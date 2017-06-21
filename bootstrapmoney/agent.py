@@ -19,15 +19,25 @@ class Agent(object):
 
     name = "Agent"
 
-    def __init__(self, traits, index):
+    def __init__(self, traits, index, production_costs):
         self.traits  = traits
         self.index   = index
         self.n_goods = len(self.traits.production)
+        self.costs = self.compute_costs(production_costs)
 
         # state variables
         self.stock     = np.zeros(self.n_goods, dtype=int)
         self.produced_goods = []
-        self.consummed = 0
+        self.consumed = 0
+        self.fitness = 0
+
+
+    def compute_costs(self, production_costs):
+        """Compute the costs of production of an agent. This is the negative part of the fitness score"""
+        c = 0
+        for pcost_i, pdiff_i, p_i in zip(production_costs, self.traits.production_difficulty, self.traits.production):
+            c += pcost_i * pdiff_i * p_i
+        return c
 
     def __repr__(self):
         return 'Agent_{}'.format(self.index)
@@ -45,7 +55,7 @@ class Agent(object):
     def consume(self):
         n_consumed = min(self.stock)  # note: `min` faster than `np.min` for small arrays
         self.stock[:]  -= n_consumed
-        self.consummed += n_consumed
+        self.consumed += n_consumed
 
     def exchange(self, transaction):
         """Exchange a good for another (presumably with another agent)"""
@@ -54,6 +64,6 @@ class Agent(object):
 
     def reset(self):
         self.stock[:] = 0
-        self.consummed  = 0
+        self.consumed  = 0
         self.produce()
         self.consume()

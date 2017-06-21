@@ -9,7 +9,8 @@ class Economy(object):
 
     def time_step(self):
         """Update the economy by one time-step"""
-        market_agents = self.population.sellers()
+        market_agents = [agent for agent in self.population.sellers() if max(agent.stock) > 1]
+        # self.population.sellers()
 
         if len(list(market_agents)) > 1:
 

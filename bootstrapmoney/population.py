@@ -35,7 +35,7 @@ class Population:
             evolvable = self._random_evolvable_traits(index)
             production_difficulty = self.all_possible_production_difficulties[index % len(self.all_possible_production_difficulties)]
             traits = Traits(evolvable['production'], production_difficulty, evolvable['accepted_exchanges'])
-            self.agents.append(Agent(traits, index=index))
+            self.agents.append(Agent(traits, index, self.params['production_costs']))
 
     def _random_evolvable_traits(self, index):
         """Create a random agent's traits."""
@@ -59,22 +59,15 @@ class Population:
         for agent_to_reproduce, agent_to_replace in self.agents_selection():
             self.reproduce(agent_to_reproduce, agent_to_replace.index)
 
-    def agent_fitness(self, agent):
-        """Compute the fitness of an agent.
-
-        On the positive side, the number of sets consummed, multiplied by a factor, the utility.
-        On the negative side, the sum for each good of the production costs (same for all agents),
-        by the production difficulty (specific to each agent) by the actual production.
-        """
-        return (self.params['utility'] * agent.consummed
-                - np.sum(self.params['production_costs'] * np.asarray(agent.traits.production_difficulty) * agent.traits.production))
-
     def agents_selection(self):
         """Select agents to reproduce through mutation and agents to replace.
 
         Pairs of agents (one to reproduce, one to replace) are created between agents with the same
         production preferences.
         """
+        for agent in self.agents:
+            agent.fitness = agent.consumed * self.params['utility'] - agent.costs
+
         selected_to_be_copied, selected_to_be_changed = [], []
 
         prod_diff_sets = {} # sets of agents with the same production preferences.
@@ -89,7 +82,7 @@ class Population:
         for i in range(self.n_mating):
             reproduction_pairs = []
             agent_set = prod_diff_sets[i%len(prod_diff_sets)]
-            agent_set.sort(key=lambda agent: self.agent_fitness(agent))
+            agent_set.sort(key=lambda agent: agent.fitness)
             # dividing the agents in two classes: high fitness, and low fitness (i.e. to replace)
             agents_to_imitate  = agent_set[len(agent_set)//2:]
             np.random.shuffle(agents_to_imitate)
@@ -116,4 +109,4 @@ class Population:
         traits = Traits(new_traits['production'], agent.traits.production_difficulty,
                         new_traits['accepted_exchanges'])
 
-        self.agents[index] = Agent(traits, index=index)
+        self.agents[index] = Agent(traits, index, self.params['production_costs'])

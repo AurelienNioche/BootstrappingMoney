@@ -35,7 +35,7 @@ class History:
         n_producers       = np.zeros(self.n_goods)
         global_production = np.zeros(self.n_goods)
         for agent in agents:
-            fitness += population.agent_fitness(agent)
+            fitness += agent.fitness
             n_producers[agent.produced_goods] += 1
             global_production += agent.traits.production
         fitness /= len(agents)

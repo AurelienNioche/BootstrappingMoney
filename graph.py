@@ -45,66 +45,51 @@ def plot(results, parameters, fig_name):
     x = range(x_max)
 
     ax = plt.subplot(n_lines, n_columns, next(counter))
-    ax.set_title("Proportion of each type of exchange\naccording to number of generations\n")
+    ax.set_title("Number of each type of exchange\naccording to number of generations\n")
 
-    type_of_exchanges = sorted([i for i in results["exchanges"][0].keys()])
-    y = []
-    for i in range(len(type_of_exchanges)):
-        y.append([])
+    n_type_of_exchanges = len(results["exchanges_labels"])
 
-    for i in range(x_max):
+    # ax.set_ylim([-0.02, 1.02])
 
-        for exchange_idx in range(len(type_of_exchanges)):
+    for exchange_idx in range(n_type_of_exchanges):
 
-            y[exchange_idx].append(results["exchanges"][i][type_of_exchanges[exchange_idx]])
-
-    ax.set_ylim([-0.02, 1.02])
-
-    for exchange_idx in range(len(type_of_exchanges)):
-
-        ax.plot(x, y[exchange_idx], label="Exchange {}".format(type_of_exchanges[exchange_idx]), linewidth=line_width)
+        ax.plot(x, results["exchanges"][:, exchange_idx],
+                label="Exchange {}".format(results["exchanges_types"][exchange_idx]),
+                linewidth=line_width)
 
     ax.legend(fontsize=8)
 
     # NUMBER OF EXCHANGES GENERATION
 
     x = range(len(results["n_exchanges"]))
-    y = results["n_exchanges"]
 
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Total number of exchanges\naccording to number of generations\n")
-    ax.plot(x, y, linewidth=line_width)
+    ax.plot(x, results["n_exchanges"], linewidth=line_width)
 
     # NUMBER OF INTERVENTION OF EACH GOOD
 
+    n_goods = len(results["n_goods_intervention"][0, :])
+
     x_max = len(results["n_exchanges"])
     x = range(x_max)
-    y = []
-    for i in range(len(results["n_goods_intervention"][0].keys())):
-        y.append([])
-
-    for i in range(x_max):
-
-        for key in results["n_goods_intervention"][0].keys():
-            y[key].append(results["n_goods_intervention"][i][key])
 
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Number of interventions of each good\naccording to number of generations\n")
 
-    for key in results["n_goods_intervention"][0].keys():
+    for i in range(n_goods):
 
-        ax.plot(x, y[key], label="Good {}".format(key), linewidth=line_width)
+        ax.plot(x, results["n_goods_intervention"][:, i], label="Good {}".format(i), linewidth=line_width)
 
     ax.legend(fontsize=8)
 
     # DIVERSITY OF PRODUCTION
 
     x = range(len(results["production_diversity"]))
-    y = results["production_diversity"]
 
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Production diversity\naccording to number of generations\n")
-    ax.plot(x, y, linewidth=line_width)
+    ax.plot(x, results["production_diversity"], linewidth=line_width)
 
     # N PRODUCERS
 
@@ -122,15 +107,16 @@ def plot(results, parameters, fig_name):
 
     # GLOBAL PRODUCTION
 
-    n_goods = len(results["production"][0])
+    n_goods = len(results["production"][0, :])
+
+    x = range(len(results["production"][:]))
 
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Global production for each good \n")
 
     for i in range(n_goods):
-        y = [j[i] for j in results["production"]]
-        x = range(len(y))
-        ax.plot(x, y, linewidth=line_width, label="Good {}".format(i))
+
+        ax.plot(x, results["production"][:, i], linewidth=line_width, label="Good {}".format(i))
 
     ax.legend(fontsize=8)
 

@@ -36,30 +36,28 @@ class Economy(object):
 
         self.market_agents = None
 
-        # ---- For final backup ----- #
+        self.markets = dict([(i, []) for i in it.permutations(range(n_goods), r=2)])
+        self.exchanges_types = [i for i in it.combinations(range(self.n_goods), r=2)]
+
+        self.exchanges_labels = dict([(e, i) for i, e in enumerate(self.exchanges_types)])
+
         self.back_up = {
-            "exchanges": [],
-            "n_exchanges": [],
-            "fitness": [],
-            "production_diversity": [],
-            "n_producers": [],
-            # "n_market_agents": [],
-            # "n_exchanges_t": [],
-            "n_goods_intervention": [],
-            "production": []
+            "exchanges": np.zeros((self.n_generations, len(self.exchanges_types))),
+            "n_exchanges": np.zeros(self.n_generations),
+            "fitness": np.zeros(self.n_generations),
+            "production_diversity": np.zeros(self.n_generations),
+            "n_producers": np.zeros((self.n_generations, self.n_goods)),
+            "n_goods_intervention": np.zeros((self.n_generations, self.n_goods)),
+            "production": np.zeros((self.n_generations, self.n_goods)),
+            "exchanges_labels": self.exchanges_labels,
+            "exchanges_types": self.exchanges_types
         }
 
-        # ----- For periodic backup ----- #
-
-        self.temp_back_up = {
-            "exchanges": dict([((i, j), 0) for i, j in it.combinations(range(n_goods), r=2)]),
-            "n_exchanges": 0,
-            "n_goods_intervention": dict([(i, 0) for i in range(self.n_goods)])
-        }
+        self.g = None
 
     def run(self):
 
-        for g in tqdm(range(self.n_generations)):
+        for self.g in tqdm(range(self.n_generations)):
 
             self.prepare_new_generation()
 
@@ -87,37 +85,63 @@ class Economy(object):
 
         for i in range(self.n_agents):
 
-            a = self.create_single_agent(i)
-
+            a = Agent(
+                n_goods=self.n_goods,
+                # Assume an agent doesn't choose production preferences
+                production_advantages=
+                self.all_possible_production_advantages[i % len(self.all_possible_production_advantages)],
+                production_costs=self.production_costs,
+                u=self.u,
+                idx=i,
+                **self.get_agent_random_strategic_attributes()
+            )
             agents.append(a)
             agent_idx += 1
 
         return agents
 
-    def create_single_agent(self, idx):
-
-        return Agent(
-            n_goods=self.n_goods,
-            # Assume an agent doesn't choose production preferences
-            production_advantages=
-            self.all_possible_production_advantages[idx % len(self.all_possible_production_advantages)],
-            production_costs=self.production_costs,
-            u=self.u,
-            idx=idx,
-            **self.get_agent_random_strategic_attributes()
-        )
-
     def get_agent_random_strategic_attributes(self):
 
-        production = np.random.randint(0, self.max_production+1, size=self.n_goods)
-
-        accepted_exchanges = [tuple(i) for i in np.random.permutation(
-            self.all_possible_exchanges)[:np.random.randint(1, len(self.all_possible_exchanges))]]
-
         return {
-            "production": production,
-            "accepted_exchanges": accepted_exchanges
+            "production": self.get_production(),
+            "exchange_strategies": self.get_exchange_strategies()
         }
+
+    def get_production(self):
+
+        good_choice = np.random.choice(np.arange(self.n_goods), size=self.max_production)
+        unique, counts = np.unique(good_choice, return_counts=True)
+        production = np.zeros(self.n_goods, dtype=int)
+        for value, count in zip(unique, counts):
+            production[value] = count
+
+        return production
+
+    def get_exchange_strategies(self):
+
+        exchange_strategies = np.zeros((self.n_goods, self.n_goods), dtype=object)
+        for i in range(self.n_goods):
+            for j in range(self.n_goods):
+                if i != j:
+                    exchange_strategies[i, j] = np.random.choice(self.get_possible_paths(i, j, self.n_goods))
+
+        return exchange_strategies
+
+    @staticmethod
+    def get_possible_paths(departure_node, final_node, n_nodes):
+
+        step_nodes = [i for i in range(n_nodes) if i not in [final_node, departure_node]]
+
+        paths = [[(departure_node, final_node)]]
+
+        for i in range(1, len(step_nodes) + 1):
+
+            for j in it.permutations(step_nodes, r=i):
+                node_list = [departure_node] + list(j) + [final_node]
+                path = [(node_list[i], node_list[i + 1]) for i in range(len(node_list) - 1)]
+                paths.append(path)
+
+        return paths
 
     # ---------------------------------------------------------------------------- #
 
@@ -136,57 +160,42 @@ class Economy(object):
 
         if len(market_agents) > 1:
 
-            # ---------- MANAGE EXCHANGES ----- #
-
-            # n_exchanges_t = 0   # For stats
-            for i, j in utils.derangement(market_agents):
-                # n_exchanges_t += self.make_encounter(i, j)
-                self.make_encounter(i, j)
+            self.manage_exchanges()
 
             # Each agent consumes at the end of each round and adapt his behavior (or not).
             for i in market_agents:
                 self.agents[i].consume()
 
-            # # ----------------- #
-            # # ---- STATS ------ #
-            #
-            # self.back_up["n_exchanges_t"].append(n_exchanges_t)
-            #
-            # # ---------------- #
-            # # ---------------- #
+    def manage_exchanges(self):
 
-    def make_encounter(self, i, j):
+        for k in self.markets:
+            self.markets[k] = []
 
-        # exchange_takes_place = 0
-        exchange = None
+        for agent in self.agents:
+            agent_choice = agent.which_exchange_do_you_want_to_try()
+            self.markets[agent_choice].append(agent.idx)
 
-        for x, y in self.agents[i].accepted_exchanges:
+        success_idx = []
+        for i, j in self.exchanges_types:
 
-            if self.agents[i].stock[x] > 1 \
-                    and self.agents[j].stock[y] > 1 \
-                    and (y, x) in self.agents[j].accepted_exchanges:
+            a1 = self.markets[(i, j)]
+            a2 = self.markets[(j, i)]
+            min_a = int(min([len(a1), len(a2)]))
 
-                exchange = (x, y)
+            if min_a:
 
-        if exchange is not None:
+                self.back_up["exchanges"][self.g, self.exchanges_labels[(i, j)]] += min_a
+                self.back_up["n_exchanges"][self.g] += min_a
 
-            # ...exchange occurs
-            self.agents[i].proceed_to_exchange(exchange)
-            self.agents[j].proceed_to_exchange((exchange[1], exchange[0]))
+                for good in (i, j):
+                    self.back_up["n_goods_intervention"][self.g, good] += min_a
 
-            # ----------------- #
-            # ---- STATS ------ #
+                success_idx += list(np.random.choice(a1, size=min_a))
+                success_idx += list(np.random.choice(a2, size=min_a))
 
-            self.temp_back_up["exchanges"][tuple(sorted(exchange))] += 1
-            self.temp_back_up["n_exchanges"] += 1
-            for e in exchange:
-                self.temp_back_up["n_goods_intervention"][e] += 1
-            # exchange_takes_place = 1
-
-            # ---------------- #
-            # ---------------- #
-
-        # return exchange_takes_place
+        for idx in success_idx:
+            agent = self.agents[idx]
+            agent.proceed_to_exchange()
 
     # --------------------------------------------------------------------------------------- #
     # --------------------------- EVOLUTIONARY PART ----------------------------------------- #
@@ -280,7 +289,7 @@ class Economy(object):
 
             fitness += self.agents[i].fitness
 
-            production = self.agents[i].get_production()
+            production = self.agents[i].production
             for j in range(self.n_goods):
                 if production[j] > 0:
                     n_producers[j] += 1
@@ -292,32 +301,20 @@ class Economy(object):
         # self.back_up["n_market_agents"].append(len(self.market_agents))
 
         # Keep a trace of production diversity
-        production_diversity = [sum(a.production != 0) for a in self.agents]
+        production_diversity = [sum(a.production[:] != 0) for a in self.agents]
         average_production_diversity = np.mean(production_diversity)
 
-        # Keep a trace of exchanges
-        for key in self.temp_back_up["exchanges"].keys():
-            # Avoid division by zero
-            if self.temp_back_up["n_exchanges"] > 0:
-                self.temp_back_up["exchanges"][key] /= self.temp_back_up["n_exchanges"]
-            else:
-                self.temp_back_up["exchanges"][key] = 0
+        # # Keep a trace of exchanges
+        # for key in self.temp_back_up["exchanges"].keys():
+        #     # Avoid division by zero
+        #     if self.temp_back_up["n_exchanges"] > 0:
+        #         self.temp_back_up["exchanges"][key] /= self.temp_back_up["n_exchanges"]
+        #     else:
+        #         self.temp_back_up["exchanges"][key] = 0
 
         # For back up
-        self.back_up["exchanges"].append(self.temp_back_up["exchanges"].copy())
-        self.back_up["fitness"].append(fitness)
-        self.back_up["n_exchanges"].append(self.temp_back_up["n_exchanges"])
-        self.back_up["production_diversity"].append(average_production_diversity)
-        self.back_up["n_producers"].append(n_producers)
-        self.back_up["n_goods_intervention"].append(self.temp_back_up["n_goods_intervention"].copy())
-        self.back_up["production"].append(global_production)
+        self.back_up["fitness"][self.g] = fitness
+        self.back_up["production_diversity"][self.g] = average_production_diversity
+        self.back_up["n_producers"][self.g, :] = n_producers
+        self.back_up["production"][self.g, :] = global_production
 
-        self.reinitialize_backup_containers()
-
-    def reinitialize_backup_containers(self):
-
-        # Containers for future backup
-        for dic in [self.temp_back_up["exchanges"], self.temp_back_up["n_goods_intervention"]]:
-            for k in dic.keys():
-                dic[k] = 0
-        self.temp_back_up["n_exchanges"] = 0

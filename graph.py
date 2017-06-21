@@ -1,17 +1,15 @@
 from pylab import plt
-from os import path
+from os import path, mkdir
+from datetime import datetime
 import itertools as it
 
 
-def get_fig_name(name, folder="~/Desktop/"):
+def get_fig_name(root_folder=path.expanduser("~/Desktop/MoneyBootstrapping"), root_name="MB"):
 
-    fig_name = path.expanduser("{}{}.pdf".format(folder, name))
+    if not path.exists(root_folder):
+        mkdir(root_folder)
 
-    init_fig_name = fig_name.split(".")[0]
-    i = 2
-    while path.exists(fig_name):
-        fig_name = "{}{}.pdf".format(init_fig_name, i)
-        i += 1
+    fig_name = "{}/{}_{}.pdf".format(root_folder, root_name, datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f"))
 
     return fig_name
 
@@ -172,7 +170,7 @@ def plot(results, parameters, fig_name):
     plt.close()
 
 
-def graph(results, parameters):
+def graph(results, parameters, root_name, root_folder):
 
-    fig_name = get_fig_name(name="MoneyBootstrapping_refactor")
+    fig_name = get_fig_name(root_name=root_name, root_folder=root_folder)
     plot(results, parameters, fig_name)

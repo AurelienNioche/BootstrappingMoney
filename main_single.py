@@ -8,7 +8,7 @@ random_seed = 460741801
 
 parameters = {
     "random_seed": random_seed,
-    "n_generations": 500,
+    "n_generations": 10000,
     "n_periods_per_generation": 50,
     "n_goods": 3,
     "n_agents": 300,

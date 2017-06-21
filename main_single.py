@@ -7,17 +7,17 @@ from os import path
 random_seed = 460741801
 
 parameters = {
-    "random_seed": random_seed,
-    "n_generations": 10000,
-    "n_periods_per_generation": 50,
-    "n_goods": 3,
+    "mating_rate": 0.3,
+    "max_production": 10,
     "n_agents": 300,
-    "p_mutation": 0.01,
-    "mating_rate": 0.5,
-    "production_costs": [2, 1.5, 1],
-    "production_advantages": [1, 1 / 2, 1 / 100],
-    "max_production": 50,
-    "u": 1
+    "n_generations": 10 ** 4,
+    "n_goods": 3,
+    "n_periods_per_generation": 5,
+    "p_mutation": 0.1,
+    "production_advantages": [4, 2, 0.5],
+    "production_costs": [4, 2, 2],
+    "random_seed": random_seed,
+    "u": 10
 }
 
 e = Economy(**parameters)

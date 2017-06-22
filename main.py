@@ -13,7 +13,7 @@ def main():
         "mating_rate": 0.3,
         "max_production": 10,
         "n_agents": 300,
-        "n_generations": 200,
+        "n_generations": 100,
         "n_goods": 3,
         "n_periods_per_generation": 5,
         "p_mutation": 0.1,

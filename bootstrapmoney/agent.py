@@ -6,13 +6,12 @@ class Traits:
     def __init__(self, production, production_difficulty, accepted_exchanges):
         self.production_difficulty = tuple(production_difficulty)
         self.production            = np.asarray(production)
-        self.accepted_exchanges    = np.asarray(accepted_exchanges)
+        self.accepted_exchanges    = set(accepted_exchanges)
 
     @property
     def evolvable(self):
         """Evolvable traits are the old strategic traits"""
-        return {"production": self.production,
-                "accepted_exchanges": self.accepted_exchanges}
+        return (("production", self.production) , ("accepted_exchanges", self.accepted_exchanges))
 
 
 class Agent(object):
@@ -41,13 +40,6 @@ class Agent(object):
 
     def __repr__(self):
         return 'Agent_{}'.format(self.index)
-
-    def seller(self):
-        return any(self.stock > 1)
-
-    @property
-    def accepted_exchanges(self):
-        return self.traits.accepted_exchanges
 
     def produce(self):
         self.stock += self.traits.production

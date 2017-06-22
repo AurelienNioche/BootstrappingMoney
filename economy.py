@@ -190,8 +190,8 @@ class Economy(object):
                 for good in (i, j):
                     self.back_up["n_goods_intervention"][self.g, good] += min_a
 
-                success_idx += list(np.random.choice(a1, size=min_a))
-                success_idx += list(np.random.choice(a2, size=min_a))
+                success_idx += list(np.random.choice(a1, size=min_a, replace=False))
+                success_idx += list(np.random.choice(a2, size=min_a, replace=False))
 
         for idx in success_idx:
             agent = self.agents[idx]

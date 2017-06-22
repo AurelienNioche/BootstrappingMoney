@@ -67,6 +67,8 @@ class Agent(object):
 
         if self.exchange[1] == self.goal:
             self.involved = False
+        else:
+            self.step += 1
 
     def get_strategic_attributes(self):
 

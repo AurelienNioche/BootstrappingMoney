@@ -1,8 +1,10 @@
-import numpy as np
-from os import path
-from economy import Economy
-from graph import graph
 from multiprocessing import Pool, cpu_count
+from os import path
+
+import numpy as np
+
+from bootstrapmoney.economy import Economy
+from graph import graph
 
 
 def compute(random_seed):

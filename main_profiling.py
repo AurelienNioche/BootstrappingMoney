@@ -1,5 +1,6 @@
 import numpy as np
-from economy import Economy
+
+from bootstrapmoney.economy import Economy
 
 
 def main():

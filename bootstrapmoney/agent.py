@@ -44,6 +44,7 @@ class Agent(object):
             to_be_sold = np.random.choice(np.arange(self.n_goods)[self.stock == max_stock])
 
             self.current_strategy = self.exchange_strategies[to_be_sold, self.goal]
+            assert self.current_strategy != 0, "Stocks should not be empty!"
 
             self.step = 0
             self.involved = True
@@ -56,7 +57,6 @@ class Agent(object):
 
         n_consumption_t = min(self.stock)
         if n_consumption_t:
-
             self.stock[:] -= n_consumption_t
             self.n_consumption += n_consumption_t
 
@@ -68,21 +68,21 @@ class Agent(object):
         if self.exchange[1] == self.goal:
             self.involved = False
 
+        else:
+            self.step += 1
+
     def get_strategic_attributes(self):
 
-        str_attributes = {
+        return {
             "production": self.production,
             "exchange_strategies": self.exchange_strategies
         }
 
-        return str_attributes
-
     def compute_fitness(self):
 
         pos = self.u * self.n_consumption
-        neg = 0
-        for i in range(self.n_goods):
-            neg += self.production[i] * self.production_costs[i] * self.production_advantages[i]
+        neg = sum([self.production[i] * self.production_costs[i] * self.production_advantages[i]
+                   for i in range(self.n_goods)])
 
         self.fitness = \
             pos - neg
@@ -94,7 +94,3 @@ class Agent(object):
         self.n_consumption = 0
         self.involved = False
 
-
-if __name__ == "__main__":
-
-    pass

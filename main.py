@@ -3,7 +3,7 @@ from os import path
 
 import numpy as np
 
-from bootstrapmoney.economy import Economy
+from bootstrapmoney.model import Model
 from graph import graph
 
 
@@ -15,17 +15,17 @@ def compute(random_seed):
         "n_agents": 300,
         "n_generations": 4000,
         "n_goods": 3,
-        "n_periods_per_generation": 10,
+        "n_periods_per_generation": 7,
         "p_mutation": 0.1,
-        "production_advantages": [4, 2, 0.5],
-        "production_costs": [4, 2, 2],
+        "production_difficulty": [4, 2, 0.5],
+        "production_costs": [8, 2, 2],
         "random_seed": random_seed,
-        "u": 15
+        "utility": 20
     }
 
-    e = Economy(**parameters)
+    m = Model(parameters)
 
-    return parameters, e.run()
+    return parameters, m.run()
 
 
 def main():

@@ -34,8 +34,9 @@ class Economy(object):
             self.markets[k] = []
 
         for agent in self.mod.pop.agents:
-            agent_choice = agent.which_exchange_do_you_want_to_try()
-            self.markets[agent_choice].append(agent.idx)
+            if np.any(agent.stock > 1):
+                agent_choice = agent.which_exchange_do_you_want_to_try()
+                self.markets[agent_choice].append(agent.idx)
 
         success_idx = []
         for i, j in self.exchanges_types:
@@ -52,8 +53,8 @@ class Economy(object):
                 for good in (i, j):
                     self.mod.hist.back_up["n_goods_intervention"][self.g, good] += min_a
 
-                success_idx += list(np.random.choice(a1, size=min_a))
-                success_idx += list(np.random.choice(a2, size=min_a))
+                success_idx += list(np.random.choice(a1, size=min_a, replace=False))
+                success_idx += list(np.random.choice(a2, size=min_a, replace=False))
 
         for idx in success_idx:
             self.mod.pop.agents[idx].proceed_to_exchange()
@@ -79,7 +80,7 @@ class Economy(object):
         fitness /= self.mod.pop.n_agents
 
         # Keep a trace of production diversity
-        production_diversity = [sum(a.production[:] != 0) for a in self.mod.pop.agents]
+        production_diversity = [np.count_nonzero(a.production[:]) for a in self.mod.pop.agents]
         average_production_diversity = np.mean(production_diversity)
 
         # For back up

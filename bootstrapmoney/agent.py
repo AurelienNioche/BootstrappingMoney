@@ -5,14 +5,14 @@ class Agent(object):
 
     name = "Agent"
 
-    def __init__(self, u, production, production_advantages, exchange_strategies, production_costs, n_goods, idx):
+    def __init__(self, u, production, production_difficulty, exchange_strategies, production_costs, n_goods, idx):
 
         self.n_goods = n_goods
         self.idx = idx
         self.stock = np.zeros(self.n_goods, dtype=int)
 
         self.production = np.asarray(production, dtype=int)
-        self.production_advantages = np.asarray(production_advantages)
+        self.production_difficulty = np.asarray(production_difficulty)
         self.production_costs = np.asarray(production_costs)
 
         self.exchange_strategies = exchange_strategies
@@ -43,8 +43,7 @@ class Agent(object):
             max_stock = max(self.stock)
             to_be_sold = np.random.choice(np.arange(self.n_goods)[self.stock == max_stock])
 
-            self.current_strategy = self.exchange_strategies[to_be_sold, self.goal]
-            assert self.current_strategy != 0, "Stocks should not be empty!"
+            self.current_strategy = self.exchange_strategies[(to_be_sold, self.goal)]
 
             self.step = 0
             self.involved = True
@@ -71,21 +70,15 @@ class Agent(object):
         else:
             self.step += 1
 
-    def get_strategic_attributes(self):
-
-        return {
-            "production": self.production,
-            "exchange_strategies": self.exchange_strategies
-        }
-
     def compute_fitness(self):
 
         pos = self.u * self.n_consumption
-        neg = sum([self.production[i] * self.production_costs[i] * self.production_advantages[i]
-                   for i in range(self.n_goods)])
+        neg = sum(self.production * self.production_costs * self.production_difficulty)
 
         self.fitness = \
             pos - neg
+
+        return self.fitness
 
     def reset(self):
 

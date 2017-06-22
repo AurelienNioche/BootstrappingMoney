@@ -17,7 +17,7 @@ def compute(random_seed):
         "n_goods": 3,
         "n_periods_per_generation": 7,
         "p_mutation": 0.1,
-        "production_difficulty": [4, 2, 0.5],
+        "production_difficulty": [4, 4, 0.5],
         "production_costs": [8, 2, 2],
         "random_seed": random_seed,
         "utility": 20

@@ -6,91 +6,86 @@ class Evolution:
     def __init__(self, model, params):
 
         self.mod = model
+        self.n_agents = params["n_agents"]
         self.n_generations = params["n_generations"]
         self.n_periods_per_generation = params["n_periods_per_generation"]
         self.mating_rate = params["mating_rate"]
         self.p_mutation = params["p_mutation"]
 
+        self.selected_to_be_copied = None
+        self.selected_to_be_changed = None
+
     def reproduce_agents(self):
         """Reproduce agents using a process of 'natural' selection."""
 
-        selected_to_be_copied, selected_to_be_changed = self.procedure_of_selection()
+        self.procedure_of_selection()
+        self.procedure_of_reproduction()
 
-        for to_be_copied, to_be_changed in zip(selected_to_be_copied, selected_to_be_changed):
-
-            self.procedure_of_reproduction(to_be_copied, to_be_changed)
-
+    # @profile
     def procedure_of_selection(self):
         """Select agents to reproduce.
 
         One part of agents will be selected to be copied, an another part to be changed.
 
         Pairs of agents (one to reproduce, one to replace) are created between agents with the same
-        production preferences.
+        production difficulties.
         """
 
-        selected_to_be_copied, selected_to_be_changed = [], []
+        self.selected_to_be_copied, self.selected_to_be_changed = [], []
+
+        tup_possible_production_difficulty = list(self.mod.pop.sorted_idx_per_production_difficulty.keys())
+
+        data = {
+            tuple(i): {"idx": [], "fitness": []}
+            for i in self.mod.eco.all_possible_production_difficulty
+        }
+
+        for prod_difficulty in tup_possible_production_difficulty:
+
+            idx = np.random.permutation(self.mod.pop.sorted_idx_per_production_difficulty[prod_difficulty])
+
+            sorted_idx = np.argsort(self.mod.pop.agents_fitness[idx])
+            data[prod_difficulty]["idx"] = idx[sorted_idx]
+            data[prod_difficulty]["fitness"] = self.mod.pop.agents_fitness[idx[sorted_idx]]
 
         # ---- #
 
-        data = dict()
+        np.random.shuffle(tup_possible_production_difficulty)
 
-        for a in np.random.permutation(self.mod.pop.agents):  # Permutation is important in case of equal fitness
-            prod_advantage = tuple(a.production_advantages)
-            if prod_advantage not in data.keys():
-                data[prod_advantage] = {
-                    "idx": [],
-                    "fitness": []
-                }
-            data[prod_advantage]["idx"].append(a.idx)
-            data[prod_advantage]["fitness"].append(a.fitness)
+        n_prod_difficulties = len(tup_possible_production_difficulty)
 
-        # ---- #
+        for i in range(int(self.mating_rate * self.n_agents)):
 
-        prod_advantages = np.random.permutation(self.mod.eco.all_possible_production_advantages)
+            prod_difficulty = tup_possible_production_difficulty[i % n_prod_difficulties]
 
-        for i in range(int(self.mating_rate * self.mod.pop.n_agents)):
+            if len(data[prod_difficulty]["idx"]) > 1:
 
-            prod_advantage = tuple(prod_advantages[i % len(prod_advantages)])
-
-            if len(data[prod_advantage]["idx"]) > 1:
-
-                idx_with_best_fitness = np.argmax(data[prod_advantage]["fitness"])
-                idx_with_worse_fitness = np.argmin(data[prod_advantage]["fitness"])
-
-                selected_to_be_copied.append(
-                    data[prod_advantage]["idx"][
-                        idx_with_best_fitness
-                    ]
+                self.selected_to_be_copied.append(
+                    data[prod_difficulty]["idx"][-1]
                 )
 
-                selected_to_be_changed.append(
-                    data[prod_advantage]["idx"][
-                        idx_with_worse_fitness
-                    ]
+                self.selected_to_be_changed.append(
+                    data[prod_difficulty]["idx"][0]
                 )
 
-                for j, idx in enumerate([idx_with_best_fitness, idx_with_worse_fitness]):
-                    data[prod_advantage]["fitness"].pop(idx - j)
-                    data[prod_advantage]["idx"].pop(idx - j)
+                data[prod_difficulty]["fitness"] = data[prod_difficulty]["fitness"][1: -1]
+                data[prod_difficulty]["idx"] = data[prod_difficulty]["idx"][1: -1]
 
-        return selected_to_be_copied, selected_to_be_changed
-
-    def procedure_of_reproduction(self, to_be_copied, to_be_changed):
+    # @profile
+    def procedure_of_reproduction(self):
         """Agents with the worse fitness 'imitate' agents with best fitness, copying certain attributes.
         However, this copy can be 'mutated' in a way to maintain variability (here 'mutated' means randomly picked)
         """
+        n = len(self.selected_to_be_copied)
+        r = np.random.random((n, len(self.mod.pop.random_attribute)))
 
-        good_attributes = self.mod.pop.agents[to_be_copied].get_strategic_attributes()
-        random_attributes = self.mod.pop.get_agent_random_strategic_attributes()
+        for i, to_be_copied, to_be_changed in zip(range(n), self.selected_to_be_copied, self.selected_to_be_changed):
 
-        r = np.random.random(len(good_attributes))
+            for idx, key in enumerate(self.mod.pop.random_attribute):
 
-        for idx, key in enumerate(good_attributes.keys()):
+                if r[i, idx] <= self.p_mutation:
 
-            if r[idx] <= self.p_mutation:
+                    setattr(self.mod.pop.agents[to_be_changed], key, self.mod.pop.random_attribute[key]())
 
-                setattr(self.mod.pop.agents[to_be_changed], key, random_attributes[key])
-
-            else:
-                setattr(self.mod.pop.agents[to_be_changed], key, good_attributes[key])
+                else:
+                    setattr(self.mod.pop.agents[to_be_changed], key, self.mod.pop.agents[to_be_copied].__getattribute__(key))

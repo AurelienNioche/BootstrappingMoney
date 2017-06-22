@@ -9,43 +9,61 @@ class Population:
     def __init__(self, model, params):
 
         self.n_agents = params["n_agents"]
+        self.n_goods = params["n_goods"]
+        
         self.mod = model
 
-        self.agents = None
+        self.agents = list()
+        self.possible_exchange_strategies = dict()
+
+        self.random_attribute = {
+            "production": self.get_production,
+            "exchange_strategies": self.get_exchange_strategies
+        }
+        
+        self.agents_fitness = np.zeros(self.n_agents)
+
+        self.sorted_idx_per_production_difficulty = None
+
+    def setup(self):
+
+        self.sorted_idx_per_production_difficulty = {
+            tuple(i): []
+            for i in self.mod.eco.all_possible_production_difficulty
+        }
+        self.create_possible_exchange_strategies()
+        self.create_agents()
 
     def create_agents(self):
 
-        self.agents = []
-
-        agent_idx = 0
+        possible_prod_difficulty = np.random.permutation(self.mod.eco.all_possible_production_difficulty)
 
         for i in range(self.n_agents):
 
+            prod_difficulty = possible_prod_difficulty[i % len(self.mod.eco.all_possible_production_difficulty)]
+
+            self.sorted_idx_per_production_difficulty[tuple(prod_difficulty)].append(i)
+
             a = Agent(
-                n_goods=self.mod.eco.n_goods,
+                n_goods=self.n_goods,
                 # Assume an agent doesn't choose production preferences
-                production_advantages=
-                self.mod.eco.all_possible_production_advantages[i % len(self.mod.eco.all_possible_production_advantages)],
+                production_difficulty=prod_difficulty,
                 production_costs=self.mod.eco.production_costs,
                 u=self.mod.eco.u,
                 idx=i,
-                **self.get_agent_random_strategic_attributes()
+                production=self.get_production(),
+                exchange_strategies=self.get_exchange_strategies()
             )
             self.agents.append(a)
-            agent_idx += 1
-
-    def get_agent_random_strategic_attributes(self):
-
-        return {
-            "production": self.get_production(),
-            "exchange_strategies": self.get_exchange_strategies()
-        }
 
     def get_production(self):
 
-        good_choice = np.random.choice(np.arange(self.mod.eco.n_goods), size=self.mod.eco.max_production)
+        """"Production is one of the two traits of agents that will evolve.
+        Here is a method to generate it randomly."""
+
+        good_choice = np.random.choice(np.arange(self.n_goods), size=self.mod.eco.max_production)
         unique, counts = np.unique(good_choice, return_counts=True)
-        production = np.zeros(self.mod.eco.n_goods, dtype=int)
+        production = np.zeros(self.n_goods, dtype=int)
         for value, count in zip(unique, counts):
             production[value] = count
 
@@ -53,16 +71,28 @@ class Population:
 
     def get_exchange_strategies(self):
 
-        exchange_strategies = np.zeros((self.mod.eco.n_goods, self.mod.eco.n_goods), dtype=object)
-        for i in range(self.mod.eco.n_goods):
-            for j in range(self.mod.eco.n_goods):
-                if i != j:
-                    exchange_strategies[i, j] = np.random.choice(self.get_possible_paths(i, j, self.mod.eco.n_goods))
+        """Exchange strategies are one of the two traits of agents that will evolve.
+        Here is a method to generate it randomly.
+        """
+
+        exchange_strategies = dict()
+        for i, j in it.permutations(range(self.n_goods), r=2):
+            exchange_strategies[(i, j)] = np.random.choice(self.possible_exchange_strategies[(i, j)])
 
         return exchange_strategies
 
+    def create_possible_exchange_strategies(self):
+
+        """Create all possible exchange strategies.
+        It will be used for choosing a particular set of exchange strategies."""
+
+        for i, j in it.permutations(range(self.n_goods), r=2):
+            self.possible_exchange_strategies[(i, j)] = self.get_possible_paths(i, j, self.n_goods)
+
     @staticmethod
     def get_possible_paths(departure_node, final_node, n_nodes):
+
+        """Used for creating all the possible exchange strategies."""
 
         step_nodes = [i for i in range(n_nodes) if i not in [final_node, departure_node]]
 
@@ -78,6 +108,7 @@ class Population:
         return paths
 
     def consume(self):
+        """Make all agents consume."""
 
         for i in range(self.n_agents):
             self.agents[i].consume()
@@ -91,10 +122,7 @@ class Population:
             self.agents[i].produce()
             self.agents[i].consume()
 
-        self.mod.eco.market_agents = list(range(self.n_agents))
-
     def end_generation(self):
         """At the end of generation, compute fitness for all agents."""
 
-        for i in range(self.n_agents):
-            self.agents[i].compute_fitness()
+        self.agents_fitness[:] = [self.agents[i].compute_fitness() for i in range(self.n_agents)]

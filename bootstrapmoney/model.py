@@ -25,9 +25,9 @@ class Model:
     def run(self):
 
         self.hist.setup()
-        self.pop.create_agents()
+        self.pop.setup()
 
-        for self.g in tqdm(range(self.evo.n_generations)):
+        for self.t in tqdm(range(self.evo.n_generations)):
 
             self.pop.prepare_new_generation()
 

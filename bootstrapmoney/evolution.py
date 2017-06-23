@@ -12,14 +12,11 @@ class Evolution:
         self.mating_rate = params["mating_rate"]
         self.p_mutation = params["p_mutation"]
 
-        self.selected_to_be_copied = None
-        self.selected_to_be_changed = None
-
     def reproduce_agents(self):
         """Reproduce agents using a process of 'natural' selection."""
 
-        self.procedure_of_selection()
-        self.procedure_of_reproduction()
+        selected_to_be_copied, selected_to_be_changed = self.procedure_of_selection()
+        self.procedure_of_reproduction(selected_to_be_copied, selected_to_be_changed)
 
     # @profile
     def procedure_of_selection(self):
@@ -31,7 +28,7 @@ class Evolution:
         production difficulties.
         """
 
-        self.selected_to_be_copied, self.selected_to_be_changed = [], []
+        selected_to_be_copied, selected_to_be_changed = [], []
 
         tup_possible_production_difficulty = list(self.mod.pop.sorted_idx_per_production_difficulty.keys())
 
@@ -60,26 +57,28 @@ class Evolution:
 
             if len(data[prod_difficulty]["idx"]) > 1:
 
-                self.selected_to_be_copied.append(
+                selected_to_be_copied.append(
                     data[prod_difficulty]["idx"][-1]
                 )
 
-                self.selected_to_be_changed.append(
+                selected_to_be_changed.append(
                     data[prod_difficulty]["idx"][0]
                 )
 
                 data[prod_difficulty]["fitness"] = data[prod_difficulty]["fitness"][1: -1]
                 data[prod_difficulty]["idx"] = data[prod_difficulty]["idx"][1: -1]
 
+        return selected_to_be_copied, selected_to_be_changed
+
     # @profile
-    def procedure_of_reproduction(self):
+    def procedure_of_reproduction(self, selected_to_be_copied, selected_to_be_changed):
         """Agents with the worse fitness 'imitate' agents with best fitness, copying certain attributes.
         However, this copy can be 'mutated' in a way to maintain variability (here 'mutated' means randomly picked)
         """
-        n = len(self.selected_to_be_copied)
+        n = len(selected_to_be_copied)
         r = np.random.random((n, len(self.mod.pop.random_attribute)))
 
-        for i, to_be_copied, to_be_changed in zip(range(n), self.selected_to_be_copied, self.selected_to_be_changed):
+        for i, (to_be_copied, to_be_changed) in enumerate(zip(selected_to_be_copied, selected_to_be_changed)):
 
             for idx, key in enumerate(self.mod.pop.random_attribute):
 

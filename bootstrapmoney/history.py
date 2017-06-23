@@ -21,6 +21,10 @@ class History:
                 "production": np.zeros((self.mod.evo.n_generations, self.mod.eco.n_goods)),
                 "exchanges_labels": self.mod.eco.exchanges_labels,
                 "exchanges_types": self.mod.eco.exchanges_types,
-                "n_strategies": [{} for _ in range(self.mod.evo.n_generations)]
+                "n_strategies": [{} for _ in range(self.mod.evo.n_generations)],
+                "direct": np.zeros(self.mod.evo.n_generations),
+                "indirect_0": np.zeros(self.mod.evo.n_generations),
+                "indirect_1": np.zeros(self.mod.evo.n_generations),
+                "indirect_2": np.zeros(self.mod.evo.n_generations),
             }
         )

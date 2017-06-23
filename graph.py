@@ -10,7 +10,6 @@ from pylab import plt
 import scipy.signal
 
 
-
 def get_fig_name(root_folder=path.expanduser("~/Desktop/MoneyBootstrapping"), root_name="MB"):
 
     if not path.exists(root_folder):
@@ -48,8 +47,8 @@ def plot(results, parameters, fig_name):
 
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Fitness average\naccording to number of generations\n")
-    ax.plot(x, y, linewidth=line_width, alpha=0.25)
-    #ax.plot(x, moving_average(y), linewidth=2*line_width, alpha=0.5)
+    ax.plot(x, y, linewidth=line_width)  # alpha=0.25)
+    # ax.plot(x, moving_average(y), linewidth=2*line_width, alpha=0.5)
 
     # PROPORTION OF EACH TYPE OF EXCHANGE
 
@@ -151,14 +150,11 @@ def plot(results, parameters, fig_name):
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Strategies")
 
-    # FIXME: move me somewhere else
-    direct   = [sum([n_s for s_path, n_s in strategies_t.items() if len(s_path) == 1]) for strategies_t in results['n_strategies']]
-    indirect0 = [sum([n_s for s_path, n_s in strategies_t.items() if len(s_path) == 2 and s_path[0][1] == 0]) for strategies_t in results['n_strategies']]
-    indirect = [sum([n_s for s_path, n_s in strategies_t.items() if len(s_path) == 2 and s_path[0][1] != 0]) for strategies_t in results['n_strategies']]
-
-    ax.plot(range(len(direct)),       direct, linewidth=line_width, label="Direct")
-    ax.plot(range(len(indirect)),   indirect, linewidth=line_width, label="Indirect (no 0)")
-    ax.plot(range(len(indirect0)), indirect0, linewidth=line_width, label="Indirect (zero)")
+    x = range(len(results["direct"]))
+    ax.plot(x, results["indirect_0"], linewidth=line_width, label="Indirect 0")
+    ax.plot(x, results["indirect_1"], linewidth=line_width, label="Indirect 1")
+    ax.plot(x, results["indirect_2"], linewidth=line_width, label="Indirect 2")
+    ax.plot(x, results["direct"], linewidth=line_width, label="Direct")
     ax.legend(fontsize=8)
 
     plt.tight_layout()

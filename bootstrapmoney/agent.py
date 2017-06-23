@@ -30,7 +30,6 @@ class Agent(object):
         self.current_strategy = None
         self.step = 0
 
-
     def produce(self):
 
         self.stock += self.production
@@ -46,6 +45,8 @@ class Agent(object):
             to_be_sold = np.random.choice(np.arange(self.n_goods)[self.stock == max_stock])
 
             self.current_strategy = self.exchange_strategies[(to_be_sold, self.goal)]
+
+            # For backup
             exch_hist = self.mod.hist.back_up["n_strategies"][self.mod.t]
             exch_hist[self.current_strategy] = exch_hist.get(self.current_strategy, 0) + 1
 

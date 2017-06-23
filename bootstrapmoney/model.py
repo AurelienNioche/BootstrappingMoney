@@ -2,7 +2,7 @@ import numpy as np
 
 from tqdm import tqdm
 
-from . import economy, population, history, evolution
+from . import economy, population, history, evolution, statistician
 
 
 class Model:
@@ -21,6 +21,7 @@ class Model:
         self.eco = economy.Economy(params=params, model=self)
         self.evo = evolution.Evolution(params=params, model=self)
         self.hist = history.History(model=self)
+        self.stat = statistician.Statistician(model=self, params=params)
 
     def run(self):
 
@@ -38,7 +39,7 @@ class Model:
 
             self.pop.end_generation()
 
-            self.eco.compute_stats()
+            self.stat.compute_stats()
             self.evo.reproduce_agents()
 
         return self.hist.back_up

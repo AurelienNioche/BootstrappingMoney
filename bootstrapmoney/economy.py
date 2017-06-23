@@ -56,30 +56,3 @@ class Economy(object):
 
                 for idx in market[arg_sorted[0]]:
                     self.mod.pop.agents[idx].proceed_to_exchange()
-
-    def compute_stats(self):
-        """Compute stats for keeping a trace of system dynamics"""
-
-        # Keep a trace of fitness, number of producers per type of good and global production
-        n_producers = np.zeros(self.n_goods)
-        global_production = np.zeros(self.n_goods)
-
-        for i in range(self.mod.pop.n_agents):
-
-            production = self.mod.pop.agents[i].production
-            for j in range(self.n_goods):
-                if production[j] > 0:
-                    n_producers[j] += 1
-            global_production += production
-
-        fitness = sum(self.mod.pop.agents_fitness) / self.mod.pop.n_agents
-
-        # Keep a trace of production diversity
-        production_diversity = [np.count_nonzero(a.production[:]) for a in self.mod.pop.agents]
-        average_production_diversity = np.mean(production_diversity)
-
-        # For back up
-        self.mod.hist.back_up["fitness"][self.mod.t] = fitness
-        self.mod.hist.back_up["production_diversity"][self.mod.t] = average_production_diversity
-        self.mod.hist.back_up["n_producers"][self.mod.t, :] = n_producers
-        self.mod.hist.back_up["production"][self.mod.t, :] = global_production

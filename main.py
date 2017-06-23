@@ -13,7 +13,7 @@ def compute(random_seed):
         "mating_rate": 0.3,
         "max_production": 10,
         "n_agents": 300,
-        "n_generations": 4000,
+        "n_generations": 200,
         "n_goods": 3,
         "n_periods_per_generation": 7,
         "p_mutation": 0.1,

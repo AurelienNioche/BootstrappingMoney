@@ -20,6 +20,7 @@ class History:
                 "n_goods_intervention": np.zeros((self.mod.evo.n_generations, self.mod.eco.n_goods)),
                 "production": np.zeros((self.mod.evo.n_generations, self.mod.eco.n_goods)),
                 "exchanges_labels": self.mod.eco.exchanges_labels,
-                "exchanges_types": self.mod.eco.exchanges_types
+                "exchanges_types": self.mod.eco.exchanges_types,
+                "n_strategies": [{} for _ in range(self.mod.evo.n_generations)]
             }
         )

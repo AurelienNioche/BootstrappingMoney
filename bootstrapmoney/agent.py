@@ -5,7 +5,7 @@ class Agent(object):
 
     name = "Agent"
 
-    def __init__(self, u, production, production_difficulty, exchange_strategies, production_costs, n_goods, idx):
+    def __init__(self, u, production, production_difficulty, exchange_strategies, production_costs, n_goods, idx, model):
 
         self.n_goods = n_goods
         self.idx = idx
@@ -18,6 +18,7 @@ class Agent(object):
         self.exchange_strategies = exchange_strategies
 
         self.u = u
+        self.mod = model
 
         self.n_consumption = 0
         self.fitness = 0
@@ -28,6 +29,7 @@ class Agent(object):
         self.goal = None
         self.current_strategy = None
         self.step = 0
+
 
     def produce(self):
 
@@ -44,6 +46,8 @@ class Agent(object):
             to_be_sold = np.random.choice(np.arange(self.n_goods)[self.stock == max_stock])
 
             self.current_strategy = self.exchange_strategies[(to_be_sold, self.goal)]
+            exch_hist = self.mod.hist.back_up["n_strategies"][self.mod.t]
+            exch_hist[self.current_strategy] = exch_hist.get(self.current_strategy, 0) + 1
 
             self.step = 0
             self.involved = True
@@ -86,4 +90,3 @@ class Agent(object):
         self.fitness = 0
         self.n_consumption = 0
         self.involved = False
-

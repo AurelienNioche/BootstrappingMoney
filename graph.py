@@ -145,6 +145,22 @@ def plot(results, parameters, fig_name):
 
     ax.text(0.5, 0.5, msg, ha='center', va='center', size=12)
 
+    # ------ STRATEGIES ------ #
+
+    # 6th subplot: STRATEGIES
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Strategies")
+
+    # FIXME: move me somewhere else
+    direct   = [sum([n_s for s_path, n_s in strategies_t.items() if len(s_path) == 1]) for strategies_t in results['n_strategies']]
+    indirect0 = [sum([n_s for s_path, n_s in strategies_t.items() if len(s_path) == 2 and s_path[0][1] == 0]) for strategies_t in results['n_strategies']]
+    indirect = [sum([n_s for s_path, n_s in strategies_t.items() if len(s_path) == 2 and s_path[0][1] != 0]) for strategies_t in results['n_strategies']]
+
+    ax.plot(range(len(direct)),       direct, linewidth=line_width, label="Direct")
+    ax.plot(range(len(indirect)),   indirect, linewidth=line_width, label="Indirect (no 0)")
+    ax.plot(range(len(indirect0)), indirect0, linewidth=line_width, label="Indirect (zero)")
+    ax.legend(fontsize=8)
+
     plt.tight_layout()
 
     plt.savefig(fig_name)

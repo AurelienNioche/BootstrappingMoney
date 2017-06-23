@@ -52,7 +52,8 @@ class Population:
                 u=self.mod.eco.u,
                 idx=i,
                 production=self.random_production(),
-                exchange_strategies=self.random_exchange_strategies()
+                exchange_strategies=self.random_exchange_strategies(),
+                model=self.mod
             )
             self.agents.append(a)
 
@@ -90,14 +91,14 @@ class Population:
         """Used for creating all the possible exchange strategies."""
 
         step_nodes = [i for i in range(n_nodes) if i not in [final_node, departure_node]]
-        paths = [[(departure_node, final_node)]]
+        paths = [((departure_node, final_node),)]
 
         for i in range(1, len(step_nodes) + 1):
 
             for j in it.permutations(step_nodes, r=i):
                 node_list = [departure_node] + list(j) + [final_node]
                 path = [(node_list[i], node_list[i + 1]) for i in range(len(node_list) - 1)]
-                paths.append(path)
+                paths.append(tuple(path))
 
         return paths
 

@@ -1,7 +1,14 @@
-from pylab import plt
 from os import path, mkdir
 import itertools as it
 from datetime import datetime
+
+# remove LAPACK/scipy harmless warning (see https://github.com/scipy/scipy/issues/5998)
+import warnings
+warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
+
+from pylab import plt
+import scipy.signal
+
 
 
 def get_fig_name(root_folder=path.expanduser("~/Desktop/MoneyBootstrapping"), root_name="MB"):
@@ -14,6 +21,10 @@ def get_fig_name(root_folder=path.expanduser("~/Desktop/MoneyBootstrapping"), ro
     return fig_name
 
 
+def moving_average(ys, window=9, polyorder=1, mode='mirror'):
+    return scipy.signal.savgol_filter(ys, window, polyorder, mode=mode)
+
+
 def plot(results, parameters, fig_name):
 
     # What is common to all subplots
@@ -21,7 +32,7 @@ def plot(results, parameters, fig_name):
 
     fig.patch.set_facecolor('white')
 
-    line_width = 2
+    line_width = 1
 
     n_lines = 3
     n_columns = 3
@@ -37,7 +48,8 @@ def plot(results, parameters, fig_name):
 
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Fitness average\naccording to number of generations\n")
-    ax.plot(x, y, linewidth=line_width)
+    ax.plot(x, y, linewidth=line_width, alpha=0.25)
+    #ax.plot(x, moving_average(y), linewidth=2*line_width, alpha=0.5)
 
     # PROPORTION OF EACH TYPE OF EXCHANGE
 

@@ -5,36 +5,50 @@ class Agent(object):
 
     name = "Agent"
 
-    def __init__(self, u, production, production_difficulty, exchange_strategies, production_costs, n_goods, idx, model):
+    def __init__(self, production, production_difficulty, exchange_strategies, idx,
+                 model):
 
-        self.n_goods = n_goods
+        # For identifying the agent (mainly useful for debug purpose
         self.idx = idx
-        self.stock = np.zeros(self.n_goods, dtype=int)
 
+        # Strategic traits
         self.production = np.asarray(production, dtype=int)
         self.production_difficulty = np.asarray(production_difficulty)
-        self.production_costs = np.asarray(production_costs)
-
         self.exchange_strategies = exchange_strategies
 
-        self.u = u
+        # Model and parameters of the model
         self.mod = model
+        self.n_goods = model.eco.n_goods
+        self.u = model.eco.u
+        self.production_costs = model.eco.production_costs
+        self.exchange_cost = model.eco.exchange_cost
 
+        # Attributes that will evolve inside a generation
         self.n_consumption = 0
+        self.n_exchange = 0
         self.fitness = 0
+        self.stock = np.zeros(self.n_goods, dtype=int)
 
+        # For current exchange
         self.exchange = None
 
+        # For current strategy
+        self.current_strategy = None
         self.involved = False
         self.goal = None
-        self.current_strategy = None
         self.step = 0
 
     def produce(self):
+        """
+        Increase stock by your amount of production
+        :return:
+        """
 
         self.stock += self.production
 
     def which_exchange_do_you_want_to_try(self):
+
+        self.n_exchange += 1
 
         if not self.involved:
 
@@ -47,8 +61,8 @@ class Agent(object):
             self.current_strategy = self.exchange_strategies[(to_be_sold, self.goal)]
 
             # For backup
-            exch_hist = self.mod.hist.back_up["n_strategies"][self.mod.t]
-            exch_hist[self.current_strategy] = exch_hist.get(self.current_strategy, 0) + 1
+            ex_hist = self.mod.hist.back_up["n_strategies"][self.mod.t]
+            ex_hist[self.current_strategy] = ex_hist.get(self.current_strategy, 0) + 1
 
             self.step = 0
             self.involved = True
@@ -58,6 +72,10 @@ class Agent(object):
         return self.exchange
 
     def consume(self):
+        """
+        For consuming, agent needs to have a unit of each good
+        :return:
+        """
 
         n_consumption_t = min(self.stock)
         if n_consumption_t:
@@ -65,6 +83,13 @@ class Agent(object):
             self.n_consumption += n_consumption_t
 
     def proceed_to_exchange(self):
+        """
+        Decrease of one unit for the good given, increase by one for the good obtained.
+        If goal of current strategy is reached, agent is not involved anymore in a strategy.
+        He will choose a new one for the next time step.
+        Otherwise, he goes to the next exchange step prescribed by the current strategy
+        :return:
+        """
 
         self.stock[self.exchange[0]] -= 1
         self.stock[self.exchange[1]] += 1
@@ -77,8 +102,16 @@ class Agent(object):
 
     def compute_fitness(self):
 
+        """
+        Fitness is composed of two parts: one counts as negative, the other counts as positive.
+         Positive is based on consumption.
+         Negative is based on production and exchange.
+        :return:
+        """
+
         pos = self.u * self.n_consumption
-        neg = sum(self.production * self.production_costs * self.production_difficulty)
+        neg = sum(self.production * self.production_costs * self.production_difficulty) \
+            + self.n_exchange * self.exchange_cost
 
         self.fitness = \
             pos - neg
@@ -90,4 +123,5 @@ class Agent(object):
         self.stock[:] = 0
         self.fitness = 0
         self.n_consumption = 0
+        self.n_exchange = 0
         self.involved = False

@@ -15,10 +15,11 @@ parameters = {
     "n_goods": 3,
     "n_periods_per_generation": 5,
     "p_mutation": 0.1,
-    "production_difficulty": [4, 2, 0.5],
-    "production_costs": [4, 2, 2],
+    "production_difficulty": [4, 4, 0.5],
+    "production_costs": [8, 2, 2],
     "random_seed": random_seed,
-    "utility": 20
+    "utility": 20,
+    "exchange_cost": 2
 }
 
 e = model.Model(parameters)

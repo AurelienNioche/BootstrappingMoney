@@ -11,16 +11,17 @@ def compute(random_seed):
 
     parameters = {
         "mating_rate": 0.3,
-        "max_production": 10,
+        "max_production": 30,
         "n_agents": 300,
-        "n_generations": 200,
+        "n_generations": 5000,
         "n_goods": 3,
-        "n_periods_per_generation": 7,
+        "n_periods_per_generation": 100,
         "p_mutation": 0.1,
-        "production_difficulty": [4, 4, 0.5],
-        "production_costs": [8, 2, 2],
+        "production_difficulty": [8, 8, 0.1],
+        "production_costs": [5, 5, 5],
         "random_seed": random_seed,
-        "utility": 20
+        "utility": 40,
+        "exchange_cost": 1
     }
 
     m = Model(parameters)

@@ -17,7 +17,8 @@ def main():
         "production_difficulty": [4, 2, 0.5],
         "production_costs": [4, 2, 2],
         "random_seed": random_seed,
-        "utility": 20
+        "utility": 20,
+        "exchange_cost": 5
     }
 
     e = model.Model(parameters)

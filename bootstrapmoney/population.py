@@ -35,6 +35,12 @@ class Population:
         self.create_agents()
 
     def create_agents(self):
+        """
+        Create population.
+        Each agent have particular production difficulties (or facilities).
+        Each agent 'chooses' (he will be selected on this basis) his production strategy and exchange strategies.
+        :return:
+        """
 
         possible_prod_difficulty = np.random.permutation(self.mod.eco.all_possible_production_difficulty)
 
@@ -45,15 +51,14 @@ class Population:
             self.sorted_idx_per_production_difficulty[tuple(prod_difficulty)].append(i)
 
             a = Agent(
-                n_goods=self.n_goods,
-                # Assume an agent doesn't choose production preferences
+                # Assume an agent doesn't choose production preferences (i.e. what is the more easy for him).
                 production_difficulty=prod_difficulty,
-                production_costs=self.mod.eco.production_costs,
-                u=self.mod.eco.u,
-                idx=i,
+                # Assume an agent 'chooses' his production strategy.
                 production=self.random_production(),
+                # Assume an agent 'chooses' his exchange strategies.
                 exchange_strategies=self.random_exchange_strategies(),
-                model=self.mod
+                model=self.mod,
+                idx=i
             )
             self.agents.append(a)
 

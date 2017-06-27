@@ -15,6 +15,7 @@ class Economy(object):
         self.production_costs = params["production_costs"]
         self.max_production = params["max_production"]
         self.u = params["utility"]
+        self.exchange_cost = params["exchange_cost"]
 
         self.markets = {i: [] for i in it.permutations(range(self.n_goods), r=2)}
         self.exchanges_types = [i for i in it.combinations(range(self.n_goods), r=2)]

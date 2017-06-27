@@ -23,8 +23,7 @@ class History:
                 "exchanges_types": self.mod.eco.exchanges_types,
                 "n_strategies": [{} for _ in range(self.mod.evo.n_generations)],
                 "direct": np.zeros(self.mod.evo.n_generations),
-                "indirect_0": np.zeros(self.mod.evo.n_generations),
-                "indirect_1": np.zeros(self.mod.evo.n_generations),
-                "indirect_2": np.zeros(self.mod.evo.n_generations),
-            }
-        )
+            })
+
+        for i in range(self.mod.eco.n_goods):
+            self.back_up["indirect_{}".format(i)] = np.zeros(self.mod.evo.n_generations)

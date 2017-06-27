@@ -150,10 +150,11 @@ def plot(results, parameters, fig_name):
     ax = plt.subplot(n_lines, n_columns, next(counter))
     ax.set_title("Strategies")
 
+    n_goods = len(parameters["production_costs"])
+
     x = range(len(results["direct"]))
-    ax.plot(x, results["indirect_0"], linewidth=line_width, label="Indirect 0")
-    ax.plot(x, results["indirect_1"], linewidth=line_width, label="Indirect 1")
-    ax.plot(x, results["indirect_2"], linewidth=line_width, label="Indirect 2")
+    for i in range(n_goods):
+        ax.plot(x, results["indirect_{}".format(i)], linewidth=line_width, label="Indirect {}".format(i))
     ax.plot(x, results["direct"], linewidth=line_width, label="Direct")
     ax.legend(fontsize=8)
 

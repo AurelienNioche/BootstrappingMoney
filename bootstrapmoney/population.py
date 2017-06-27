@@ -9,7 +9,7 @@ class Population:
     def __init__(self, model, params):
 
         self.n_agents = params["n_agents"]
-        self.n_goods = params["n_goods"]
+        self.n_goods = len(params["production_costs"])
 
         self.mod = model
 

@@ -14,14 +14,13 @@ def compute(random_seed):
         "max_production": 30,
         "n_agents": 300,
         "n_generations": 5000,
-        "n_goods": 3,
         "n_periods_per_generation": 100,
         "p_mutation": 0.1,
         "production_difficulty": [8, 8, 0.1],
         "production_costs": [5, 5, 5],
         "random_seed": random_seed,
-        "utility": 40,
-        "exchange_cost": 1
+        "utility": 200,
+        "exchange_cost": 0
     }
 
     m = Model(parameters)

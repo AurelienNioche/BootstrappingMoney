@@ -5,9 +5,9 @@ class Statistician:
 
     def __init__(self, params, model):
 
-        self.n_goods = params["n_goods"]
         self.n_agents = params["n_agents"]
-        
+        self.n_goods = len(params["production_costs"])
+
         self.mod = model
 
     def compute_stats(self):
@@ -33,7 +33,9 @@ class Statistician:
 
         # Keep a trace of strategies
         bu = self.mod.hist.back_up
-        sum_direct, sum_indirect_0, sum_indirect_1, sum_indirect_2 = 0, 0, 0, 0
+
+        sum_direct = 0
+        sum_indirect = [0, ] * self.n_goods
 
         for s_path, n_s in bu['n_strategies'][self.mod.t].items():
 
@@ -42,14 +44,11 @@ class Statistician:
 
             elif len(s_path) == 2:
 
-                if s_path[0][1] == 0:   # Get the last element of the first pair in the path
-                    sum_indirect_0 += n_s
+                for i in range(self.n_goods):
 
-                elif s_path[0][1] == 1:
-                    sum_indirect_1 += n_s
-
-                elif s_path[0][1] == 2:
-                    sum_indirect_2 += n_s
+                    if s_path[0][1] == i:   # Get the last element of the first pair in the path
+                        sum_indirect[i] += n_s
+                        break
 
         # Make a back up
         bu["fitness"][self.mod.t] = fitness
@@ -57,6 +56,5 @@ class Statistician:
         bu["n_producers"][self.mod.t, :] = n_producers
         bu["production"][self.mod.t, :] = global_production
         bu["direct"][self.mod.t] = sum_direct
-        bu["indirect_0"][self.mod.t] = sum_indirect_0
-        bu["indirect_1"][self.mod.t] = sum_indirect_1
-        bu["indirect_2"][self.mod.t] = sum_indirect_2
+        for i in range(self.n_goods):
+            bu["indirect_{}".format(i)][self.mod.t] = sum_indirect[i]

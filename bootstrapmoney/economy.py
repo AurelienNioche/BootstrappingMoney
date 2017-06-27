@@ -7,7 +7,7 @@ class Economy(object):
 
     def __init__(self, model, params):
 
-        self.n_goods = params["n_goods"]
+        self.n_goods = len(params["production_costs"])
 
         self.all_possible_exchanges = list(it.permutations(range(self.n_goods), r=2))
         self.all_possible_production_difficulty = \

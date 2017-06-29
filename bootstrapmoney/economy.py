@@ -32,7 +32,7 @@ class Economy(object):
             self.markets[k] = []
 
         for agent in self.mod.pop.agents:
-            if any(agent.stock > 1):
+            if sum(agent.stock) > self.n_goods:
                 agent_choice = agent.which_exchange_do_you_want_to_try()
                 self.markets[agent_choice].append(agent.idx)
 

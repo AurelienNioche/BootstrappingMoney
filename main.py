@@ -20,7 +20,8 @@ def compute(random_seed):
         "production_costs": [5, 5, 5],
         "random_seed": random_seed,
         "utility": 200,
-        "exchange_cost": 0
+        "exchange_cost": 0,
+        "p_direct": 0.4
     }
 
     m = Model(parameters)

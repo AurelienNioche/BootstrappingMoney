@@ -18,7 +18,8 @@ parameters = {
     "production_costs": [4, 2, 2, 2, 2],
     "random_seed": random_seed,
     "utility": 20,
-    "exchange_cost": 2
+    "exchange_cost": 2,
+    "p_direct": 0.4
 }
 
 e = model.Model(parameters)

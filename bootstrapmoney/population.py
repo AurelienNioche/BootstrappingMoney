@@ -10,6 +10,7 @@ class Population:
 
         self.n_agents = params["n_agents"]
         self.n_goods = len(params["production_costs"])
+        self.p_direct = params["p_direct"]
 
         self.mod = model
 
@@ -24,6 +25,7 @@ class Population:
         self.agents_fitness = np.zeros(self.n_agents)
 
         self.sorted_idx_per_production_difficulty = None
+        self.p_exchange_strategies = None
 
     def setup(self):
 
@@ -32,6 +34,7 @@ class Population:
             for i in self.mod.eco.all_possible_production_difficulty
         }
         self.create_possible_exchange_strategies()
+        self.create_p_exchange_strategies()
         self.create_agents()
 
     def create_agents(self):
@@ -80,7 +83,9 @@ class Population:
         """
         exchange_strategies = {}
         for i, j in it.permutations(range(self.n_goods), r=2):
-            exchange_strategies[(i, j)] = np.random.choice(self.possible_exchange_strategies[(i, j)])
+            exchange_strategies[(i, j)] = np.random.choice(
+                self.possible_exchange_strategies[(i, j)],
+                p=self.p_exchange_strategies)
 
         return exchange_strategies
 
@@ -90,6 +95,12 @@ class Population:
 
         for i, j in it.permutations(range(self.n_goods), r=2):
             self.possible_exchange_strategies[(i, j)] = self.get_possible_paths(i, j)
+
+    def create_p_exchange_strategies(self):
+
+        self.p_exchange_strategies = [self.p_direct, ] + \
+            [(1 - self.p_direct) / (len(self.possible_exchange_strategies[(0, 1)]) - 1), ] \
+             * (len(self.possible_exchange_strategies[(0, 1)]) - 1)
 
     def get_possible_paths(self, i, j):
 

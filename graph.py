@@ -33,7 +33,7 @@ def plot(results, parameters, fig_name):
 
     line_width = 1
 
-    n_lines = 3
+    n_lines   = 4
     n_columns = 3
 
     counter = it.count(1)
@@ -156,6 +156,15 @@ def plot(results, parameters, fig_name):
     for i in range(n_goods):
         ax.plot(x, results["indirect_{}".format(i)], linewidth=line_width, label="Indirect {}".format(i))
     ax.plot(x, results["direct"], linewidth=line_width, label="Direct")
+    ax.legend(fontsize=8)
+
+    # ------ MERCHANTS ------ #
+
+    # 7th subplot: NUMBER OF MERCHANTS
+    ax = plt.subplot(n_lines, n_columns, next(counter))
+    ax.set_title("Number of merchants")
+
+    ax.plot(range(len(results["n_merchant"])), results["n_merchant"], linewidth=line_width)
     ax.legend(fontsize=8)
 
     plt.tight_layout()

@@ -31,10 +31,13 @@ class Economy(object):
         for k in self.markets:
             self.markets[k] = []
 
+        n_merchant = 0
         for agent in self.mod.pop.agents:
             if sum(agent.stock) > self.n_goods:
+                n_merchant += 1
                 agent_choice = agent.which_exchange_do_you_want_to_try()
-                self.markets[agent_choice].append(agent.idx)
+                self.markets[agent_choice].append(agent)
+        self.mod.hist.back_up["n_merchant"].append(n_merchant)
 
         for i, j in self.exchanges_types:
 
@@ -52,8 +55,8 @@ class Economy(object):
                     self.mod.hist.back_up["n_goods_intervention"][self.mod.t, good] += min_n
 
                 # Select randomly agents in the part the most populated of the market
-                for idx in np.random.choice(market[arg_sorted[-1]], size=min_n, replace=False):
-                    self.mod.pop.agents[idx].proceed_to_exchange()
+                for agent in np.random.choice(market[arg_sorted[-1]], size=min_n, replace=False):
+                    agent.proceed_to_exchange()
 
-                for idx in market[arg_sorted[0]]:
-                    self.mod.pop.agents[idx].proceed_to_exchange()
+                for agent in market[arg_sorted[0]]:
+                    agent.proceed_to_exchange()

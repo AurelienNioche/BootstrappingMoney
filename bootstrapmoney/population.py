@@ -89,22 +89,16 @@ class Population:
         It will be used for choosing a particular set of exchange strategies."""
 
         for i, j in it.permutations(range(self.n_goods), r=2):
-            self.possible_exchange_strategies[(i, j)] = self.get_possible_paths(i, j, self.n_goods)
+            self.possible_exchange_strategies[(i, j)] = self.get_possible_paths(i, j)
 
-    @staticmethod
-    def get_possible_paths(departure_node, final_node, n_nodes):
-        """Used for creating all the possible exchange strategies."""
+    def get_possible_paths(self, i, j):
 
-        step_nodes = [i for i in range(n_nodes) if i not in [final_node, departure_node]]
-        paths = [((departure_node, final_node),)]
-
-        for i in range(1, len(step_nodes) + 1):
-
-            for j in it.permutations(step_nodes, r=i):
-                node_list = [departure_node] + list(j) + [final_node]
-                path = [(node_list[i], node_list[i + 1]) for i in range(len(node_list) - 1)]
-                paths.append(tuple(path))
-
+        paths = [((i, j),)]
+        for k in range(self.n_goods):
+            if k not in [i, j]:
+                paths.append(
+                    ((i, k), (k, j))
+                )
         return paths
 
     def consume(self):
